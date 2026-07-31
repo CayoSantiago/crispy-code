@@ -39,7 +39,9 @@ export async function fetchGitHub<T>(path: string): Promise<GitHubResult<T>> {
       return { status: 'ok', data: (await response.json()) as T }
     }
 
-    if (response.status === 404) {
+    // GitHub answers an unknown commit SHA with 422 "No commit found for SHA"
+    // rather than 404, so both mean the caller asked for something absent.
+    if (response.status === 404 || response.status === 422) {
       return { status: 'not-found' }
     }
 
