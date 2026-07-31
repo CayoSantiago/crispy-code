@@ -22,6 +22,12 @@ const components: { id: string; title: string; desc?: string; href: Route }[] =
       desc: 'Code block to display code with line numbers, syntax highlighting, line highlighting, and copy functionality.',
       href: '/components/code-block',
     },
+    {
+      id: 'browser',
+      title: 'Browser',
+      desc: 'Visually display websites.',
+      href: '/components/browser',
+    },
   ]
 
 export default function ComponentsPage() {

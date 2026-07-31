@@ -1,4 +1,5 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import { CheckIcon, CopyIcon } from 'lucide-react'
 import { ComponentPreview } from '@/components/component-preview'
 import { CopyButton } from '@/components/copy-button'
 import { highlighter } from '@/lib/highlight'
@@ -8,45 +9,39 @@ const code = `'use client'
 import { Button } from '@repo/ui/components/button'
 import { cn } from '@repo/ui/lib/utils'
 import { CheckIcon, CopyIcon } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 
 export function CopyButton({
   copyText,
   className,
   ...props
 }: React.ComponentProps<typeof Button> & { copyText: string }) {
-  const [showSuccess, setShowSuccess] = useState(false)
-
-  const timeoutRef = useRef<NodeJS.Timeout>(null)
-
-  const handleClick = () => {
-    if (showSuccess) return
-    navigator.clipboard.writeText(copyText)
-    setShowSuccess(true)
-    if (timeoutRef.current !== null) clearTimeout(timeoutRef.current)
-    timeoutRef.current = setTimeout(() => setShowSuccess(false), 2000)
-  }
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-    }
-  }, [])
+  const { copyToClipboard, isCopied } = useCopyToClipboard()
 
   return (
     <Button
       variant='ghost'
       size='icon-sm'
-      className={cn('disabled:opacity-100', className)}
-      onClick={handleClick}
-      disabled={showSuccess}
+      className={cn(
+        'group/copy-button relative grid grid-cols-1 grid-rows-1 disabled:opacity-100',
+        className,
+      )}
+      onClick={() => copyToClipboard(copyText)}
+      disabled={isCopied}
+      data-copied={isCopied}
       {...props}
-    >
-      {showSuccess ? <CheckIcon /> : <CopyIcon />}
+    />
+  )
+}
+
+// Usage
+export function ExampleUsage() {
+  return (
+    <CopyButton size='icon' copyText={props.copyText}>
+      <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+      <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
       <span className='sr-only'>Copy</span>
-    </Button>
+    </CopyButton>
   )
 }
 `
@@ -66,7 +61,11 @@ export default function ComponentsCopyButtonPage() {
       desc='Button to copy text to clip board with confirmation.'
       {...props}
     >
-      <CopyButton size='icon' copyText={props.copyText} />
+      <CopyButton size='icon' copyText={props.copyText}>
+        <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+        <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
+        <span className='sr-only'>Copy</span>
+      </CopyButton>
     </ComponentPreview>
   )
 }
