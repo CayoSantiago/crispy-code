@@ -1,7 +1,6 @@
 import { Badge } from '@repo/ui/components/badge'
 import { StarIcon } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import { RateLimitNotice } from '@/components/git/rate-limit-notice'
 import { getRepo } from '@/lib/github/commits'
 
 export async function RepoHeader({
@@ -16,8 +15,14 @@ export async function RepoHeader({
     notFound()
   }
 
+  // The commit list below shares the same rate limit and explains the state, so
+  // showing a second notice here would just duplicate it.
   if (result.status === 'rate-limited') {
-    return <RateLimitNotice resetAt={result.resetAt} />
+    return (
+      <h1 className='scroll-m-20 text-3xl font-semibold tracking-tight'>
+        {owner}/{repo}
+      </h1>
+    )
   }
 
   if (result.status === 'error') {
