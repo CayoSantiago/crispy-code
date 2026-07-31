@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from 'next/font/google'
 import '@repo/ui/globals.css'
 import { cn } from '@repo/ui/lib/utils'
 import { ThemeProvider } from '@/components/theme-provider'
+import { highlightCss } from '@/lib/highlight'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -28,7 +29,11 @@ export default function RootLayout({
       )}
     >
       <body suppressHydrationWarning>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
+          <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+        </ThemeProvider>
       </body>
     </html>
   )
