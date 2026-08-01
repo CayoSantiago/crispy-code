@@ -43,12 +43,14 @@ export function FileDiff({ file }: { file: GitHubCommitFile }) {
     decorations,
     highlighter,
     lang: languageForFilename(file.filename),
-    lineNumbers: true,
+    // lineNumbers: true,
     title: file.filename,
+    className:
+      '[--code-block-max-height:--spacing(full)] [&_div]:data-[slot="code"]:overflow-y-visible',
   })
 
   return (
-    <div className='grid gap-2 w-full'>
+    <div className='grid gap-2 w-full grid-cols-1'>
       {heading}
       <CodeBlock {...props} />
     </div>

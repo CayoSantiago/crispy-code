@@ -152,30 +152,11 @@
   .th-line--inserted {
     background-color: hsl(from var(--color-emerald-400) h s l / 0.1);
     border-color: var(--color-emerald-400);
-    margin-left: calc(-2 * var(--spacing));
-    padding-left: calc(2 * var(--spacing));
-    width: calc(4 * var(--spacing) + 100%) !important;
-  }
-  .th-line--inserted:first-child,
-  .th-line:not(.th-line--inserted) + .th-line--inserted {
-    border-radius: calc(0.5 * var(--spacing)) calc(0.5 * var(--spacing)) 0 0;
-  }
-  .th-line--inserted:last-child,
-  .th-line--inserted:has(+ :not(.th-line--inserted)) {
-    border-radius: 0px 0px calc(0.5 * var(--spacing)) calc(0.5 * var(--spacing));
   }
 
   .th-line--deleted {
     background-color: hsl(from var(--color-red-400) h s l / 0.1);
     border-color: var(--color-red-400);
-  }
-  .th-line--deleted:first-child,
-  .th-line:not(.th-line--deleted) + .th-line--deleted {
-    border-radius: calc(0.5 * var(--spacing)) calc(0.5 * var(--spacing)) 0 0;
-  }
-  .th-line--deleted:last-child,
-  .th-line--deleted:has(+ :not(.th-line--deleted)) {
-    border-radius: 0px 0px calc(0.5 * var(--spacing)) calc(0.5 * var(--spacing));
   }
 
   .th-line--error { text-decoration: underline wavy var(--color-red-400); }

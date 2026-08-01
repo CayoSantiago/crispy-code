@@ -68,7 +68,7 @@ export async function CommitList({
   }
 
   return (
-    <div className='grid gap-4 w-full'>
+    <div className='grid gap-4 w-full grid-cols-1'>
       <ItemGroup>
         {result.data.map((commit) => (
           <Item

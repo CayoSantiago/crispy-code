@@ -28,8 +28,8 @@ export function parsePatch(patch: string): ParsedPatch {
     }
 
     if (line.startsWith('@@')) {
-      codeLines.push(line)
-      lineClasses.push('th-line--highlighted')
+      // codeLines.push(line)
+      // lineClasses.push('th-line--highlighted')
       continue
     }
 
