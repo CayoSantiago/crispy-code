@@ -1,0 +1,631 @@
+'use client'
+
+import { Button } from '@repo/ui/components/button'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@repo/ui/components/card'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@repo/ui/components/empty'
+import { Field, FieldError, FieldLabel } from '@repo/ui/components/field'
+import { Input } from '@repo/ui/components/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@repo/ui/components/select'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  CopyIcon,
+  FolderSearchIcon,
+  LoaderCircleIcon,
+  Trash2Icon,
+} from 'lucide-react'
+import Link from 'next/link'
+import {
+  useActionState,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from 'react'
+import {
+  addLocalRoot,
+  getFindConfig,
+  lookupGitHubRepos,
+  removeLocalRoot,
+  type SearchResponse,
+  type SourceActionState,
+  searchCode,
+  setGitHubRepoSelection,
+  syncSelectedGitHubRepos,
+} from '@/app/find/actions'
+import { CopyButton } from '@/components/copy-button'
+import type { FindConfig } from '@/lib/find/config'
+import { findKeys } from '@/lib/find/keys'
+import type { SearchOptions } from '@/lib/find/search'
+
+const initialSourceState: SourceActionState = {}
+const ALL_SOURCES_VALUE = '__all_sources__'
+const emptyConfig: FindConfig = {
+  localRoots: [],
+  githubRepos: [],
+  recentSearches: [],
+}
+
+function highlightMatchedText(
+  input: string,
+  ranges: Array<{ start: number; end: number }>,
+) {
+  if (!ranges.length) {
+    return input
+  }
+
+  const parts: React.ReactNode[] = []
+  let cursor = 0
+
+  for (const [index, range] of ranges.entries()) {
+    if (range.start > cursor) {
+      parts.push(
+        <span key={`plain-${index}-${cursor}`}>
+          {input.slice(cursor, range.start)}
+        </span>,
+      )
+    }
+
+    parts.push(
+      <mark
+        key={`match-${index}-${range.start}`}
+        className='bg-amber-200 text-foreground px-0.5 rounded-sm dark:bg-amber-700/70'
+      >
+        {input.slice(range.start, range.end)}
+      </mark>,
+    )
+
+    cursor = range.end
+  }
+
+  if (cursor < input.length) {
+    parts.push(<span key='plain-tail'>{input.slice(cursor)}</span>)
+  }
+
+  return parts
+}
+
+export function FindWorkspace() {
+  const [sourceState, sourceAction, sourcePending] = useActionState(
+    addLocalRoot,
+    initialSourceState,
+  )
+  const queryClient = useQueryClient()
+  const configQuery = useQuery({
+    queryKey: findKeys.config(),
+    queryFn: () => getFindConfig(),
+  })
+  const config = configQuery.data ?? emptyConfig
+  const [repoOwner, setRepoOwner] = useState('')
+  const [repoLookupError, setRepoLookupError] = useState<string | null>(null)
+  const [repoResults, setRepoResults] = useState<
+    Array<{ id: string; owner: string; repo: string; selected: boolean }>
+  >([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchMode, setSearchMode] = useState<SearchOptions['mode']>('literal')
+  const [caseSensitive, setCaseSensitive] = useState(false)
+  const [wholeWord, setWholeWord] = useState(false)
+  const [extension, setExtension] = useState('')
+  const [pathFilter, setPathFilter] = useState('')
+  const [sourceFilter, setSourceFilter] = useState('')
+  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(
+    null,
+  )
+  const [syncMessages, setSyncMessages] = useState<Record<string, string>>({})
+
+  const [isRepoLookupPending, startRepoLookup] = useTransition()
+  const [isRepoSelectionPending, startRepoSelection] = useTransition()
+  const [isSyncPending, startSync] = useTransition()
+  const [isSearchPending, startSearch] = useTransition()
+  const [isRemovingLocalRoot, startLocalRootRemove] = useTransition()
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResponse(null)
+      return
+    }
+
+    const timeout = setTimeout(() => {
+      startSearch(async () => {
+        const response = await searchCode({
+          query: searchQuery,
+          mode: searchMode,
+          caseSensitive,
+          wholeWord,
+          extension,
+          pathFilter,
+          sourceFilter,
+          maxResultsPerSource: 50,
+        })
+        setSearchResponse(response)
+        queryClient.setQueryData<FindConfig>(findKeys.config(), (current) =>
+          current
+            ? { ...current, recentSearches: response.recentSearches }
+            : current,
+        )
+      })
+    }, 220)
+
+    return () => clearTimeout(timeout)
+  }, [
+    caseSensitive,
+    extension,
+    pathFilter,
+    searchMode,
+    searchQuery,
+    sourceFilter,
+    wholeWord,
+    queryClient,
+  ])
+
+  const selectedRepos = useMemo(() => {
+    return config.githubRepos.map((repo) => ({
+      ...repo,
+      message: syncMessages[repo.id] ?? 'Idle',
+    }))
+  }, [config.githubRepos, syncMessages])
+
+  const hasNoSources =
+    config.localRoots.length === 0 && config.githubRepos.length === 0
+
+  return (
+    <>
+      <div className='grid gap-6 lg:grid-cols-2'>
+        <Card>
+          <CardHeader>
+            <CardTitle>Sources</CardTitle>
+          </CardHeader>
+          <CardContent className='grid gap-6'>
+            <form action={sourceAction} className='grid gap-3'>
+              <Field>
+                <FieldLabel htmlFor='localPath'>Add local folder</FieldLabel>
+                <Input
+                  id='localPath'
+                  name='localPath'
+                  placeholder='~/Projects'
+                  required
+                  autoComplete='off'
+                />
+                {sourceState.error ? (
+                  <FieldError>{sourceState.error}</FieldError>
+                ) : null}
+              </Field>
+              <Button type='submit' disabled={sourcePending}>
+                {sourcePending ? 'Adding...' : 'Add local source'}
+              </Button>
+            </form>
+
+            {config.localRoots.length ? (
+              <div className='grid gap-2'>
+                {config.localRoots.map((root) => (
+                  <div
+                    key={root.id}
+                    className='flex items-center justify-between rounded-md border bg-card px-3 py-2'
+                  >
+                    <p className='font-mono text-xs break-all'>{root.path}</p>
+                    <Button
+                      variant='ghost'
+                      size='icon-sm'
+                      disabled={isRemovingLocalRoot}
+                      onClick={() =>
+                        startLocalRootRemove(async () => {
+                          await removeLocalRoot(root.id)
+                          await queryClient.invalidateQueries({
+                            queryKey: findKeys.config(),
+                          })
+                        })
+                      }
+                    >
+                      <Trash2Icon />
+                      <span className='sr-only'>Remove local source</span>
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+
+            <div className='grid gap-3'>
+              <Field>
+                <FieldLabel htmlFor='githubOwner'>
+                  GitHub user or org
+                </FieldLabel>
+                <Input
+                  id='githubOwner'
+                  value={repoOwner}
+                  onChange={(event) => setRepoOwner(event.target.value)}
+                  placeholder='vercel'
+                  autoCapitalize='none'
+                  spellCheck={false}
+                />
+              </Field>
+              <Button
+                type='button'
+                disabled={isRepoLookupPending}
+                onClick={() =>
+                  startRepoLookup(async () => {
+                    setRepoLookupError(null)
+                    const result = await lookupGitHubRepos(repoOwner)
+
+                    if (result.status !== 'ok') {
+                      if (result.status === 'rate-limited') {
+                        setRepoLookupError(
+                          result.resetAt
+                            ? `Rate limited until ${new Date(result.resetAt).toLocaleTimeString()}.`
+                            : 'Rate limited by GitHub. Try again soon.',
+                        )
+                      } else {
+                        setRepoLookupError(
+                          result.message ?? 'Could not load repositories.',
+                        )
+                      }
+                      setRepoResults([])
+                      return
+                    }
+
+                    setRepoResults(result.repos)
+                  })
+                }
+              >
+                {isRepoLookupPending ? 'Loading repos...' : 'Load repositories'}
+              </Button>
+              {repoLookupError ? (
+                <FieldError>{repoLookupError}</FieldError>
+              ) : null}
+
+              {repoResults.length ? (
+                <div className='grid gap-2 max-h-64 overflow-auto rounded-md border p-2'>
+                  {repoResults.map((repo) => (
+                    <label
+                      key={repo.id}
+                      className='flex items-center justify-between gap-3 rounded-sm px-2 py-1.5 hover:bg-muted'
+                    >
+                      <span className='text-sm font-mono'>
+                        {repo.owner}/{repo.repo}
+                      </span>
+                      <input
+                        type='checkbox'
+                        checked={repo.selected}
+                        disabled={isRepoSelectionPending}
+                        onChange={(event) =>
+                          startRepoSelection(async () => {
+                            await setGitHubRepoSelection(
+                              {
+                                id: repo.id,
+                                owner: repo.owner,
+                                repo: repo.repo,
+                              },
+                              event.target.checked,
+                            )
+
+                            setRepoResults((current) =>
+                              current.map((item) =>
+                                item.id === repo.id
+                                  ? { ...item, selected: event.target.checked }
+                                  : item,
+                              ),
+                            )
+
+                            await queryClient.invalidateQueries({
+                              queryKey: findKeys.config(),
+                            })
+                          })
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>GitHub mirror sync</CardTitle>
+          </CardHeader>
+          <CardContent className='grid gap-3'>
+            <Button
+              type='button'
+              disabled={!config.githubRepos.length || isSyncPending}
+              onClick={() =>
+                startSync(async () => {
+                  const results = await syncSelectedGitHubRepos()
+                  const nextMessages = Object.fromEntries(
+                    results.map((result) => [
+                      result.id,
+                      result.ok ? 'Synced' : `Failed: ${result.message}`,
+                    ]),
+                  )
+                  setSyncMessages(nextMessages)
+                  await queryClient.invalidateQueries({
+                    queryKey: findKeys.config(),
+                  })
+                })
+              }
+            >
+              {isSyncPending ? 'Syncing...' : 'Sync selected repositories'}
+            </Button>
+
+            {selectedRepos.length ? (
+              <div className='grid gap-2'>
+                {selectedRepos.map((repo) => (
+                  <div key={repo.id} className='rounded-md border p-3'>
+                    <p className='font-mono text-xs'>
+                      {repo.owner}/{repo.repo}
+                    </p>
+                    <p className='text-xs text-muted-foreground mt-1'>
+                      {repo.message}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Empty>
+                <EmptyHeader>
+                  <EmptyTitle>No GitHub repos selected yet</EmptyTitle>
+                  <EmptyDescription>
+                    Search GitHub repos on the left and check the ones you want
+                    to include.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Search</CardTitle>
+        </CardHeader>
+        <CardContent className='grid gap-4'>
+          {hasNoSources ? (
+            <Empty className='border rounded-md'>
+              <EmptyHeader>
+                <EmptyTitle>Start by adding a source</EmptyTitle>
+                <EmptyDescription>
+                  Add a local folder or select GitHub repositories, then search
+                  across all your code.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : null}
+
+          <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
+            <Input
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder='Search code...'
+              autoComplete='off'
+            />
+
+            <Select
+              value={searchMode}
+              onValueChange={(value) =>
+                setSearchMode(value as SearchOptions['mode'])
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='literal'>Literal search</SelectItem>
+                <SelectItem value='regex'>Regex search</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={sourceFilter || ALL_SOURCES_VALUE}
+              onValueChange={(value) =>
+                setSourceFilter(
+                  value === ALL_SOURCES_VALUE ? '' : (value ?? ''),
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder='All sources' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_SOURCES_VALUE}>All sources</SelectItem>
+                {searchResponse?.sourceOptions?.map((source) => (
+                  <SelectItem key={source.id} value={source.id}>
+                    {source.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              value={extension}
+              onChange={(event) => setExtension(event.target.value)}
+              placeholder='Extension filter (ts,tsx,py)'
+            />
+
+            <Input
+              value={pathFilter}
+              onChange={(event) => setPathFilter(event.target.value)}
+              placeholder='Path contains...'
+            />
+
+            <div className='flex items-center gap-2 text-xs'>
+              <label className='inline-flex items-center gap-1'>
+                <input
+                  type='checkbox'
+                  checked={caseSensitive}
+                  onChange={(event) => setCaseSensitive(event.target.checked)}
+                />
+                Case sensitive
+              </label>
+              <label className='inline-flex items-center gap-1'>
+                <input
+                  type='checkbox'
+                  checked={wholeWord}
+                  onChange={(event) => setWholeWord(event.target.checked)}
+                />
+                Whole word
+              </label>
+            </div>
+          </div>
+
+          {config.recentSearches.length ? (
+            <div className='flex flex-wrap gap-2 items-center'>
+              <span className='text-xs text-muted-foreground'>Recent:</span>
+              {config.recentSearches.map((recent) => (
+                <Button
+                  key={recent}
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  className='h-7 text-xs'
+                  onClick={() => setSearchQuery(recent)}
+                >
+                  {recent}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+
+          {searchResponse?.missingSources.length ? (
+            <div className='rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs'>
+              Missing sources:{' '}
+              {searchResponse.missingSources
+                .map((source) => source.label)
+                .join(', ')}
+            </div>
+          ) : null}
+
+          {isSearchPending ? (
+            <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+              <LoaderCircleIcon className='size-3.5 animate-spin' />
+              Searching...
+            </div>
+          ) : null}
+
+          {!searchResponse && searchQuery ? (
+            <Empty>
+              <EmptyHeader>
+                <EmptyTitle>Searching...</EmptyTitle>
+              </EmptyHeader>
+            </Empty>
+          ) : null}
+
+          {searchResponse && searchResponse.totalMatches === 0 ? (
+            <Empty className='border rounded-md'>
+              <EmptyHeader>
+                <EmptyTitle>No matches</EmptyTitle>
+                <EmptyDescription>
+                  Try broadening the query, removing filters, or syncing GitHub
+                  repositories.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : null}
+
+          {searchResponse?.groups.map((group) => (
+            <div
+              key={`${group.sourceId}:${group.projectName}`}
+              className='grid gap-2'
+            >
+              <div className='flex items-center justify-between'>
+                <h3 className='text-sm font-semibold'>
+                  {group.projectName}{' '}
+                  <span className='text-muted-foreground font-normal'>
+                    ({group.matches.length})
+                  </span>
+                </h3>
+                <span className='text-xs text-muted-foreground'>
+                  {group.sourceLabel}
+                </span>
+              </div>
+              <div className='grid gap-2'>
+                {group.matches.slice(0, 10).map((match) => (
+                  <div
+                    key={`${match.absolutePath}:${match.lineNumber}`}
+                    className='rounded-md border bg-card'
+                  >
+                    <div className='flex items-center justify-between border-b px-3 py-2'>
+                      <Link
+                        href={{
+                          pathname: '/find/file',
+                          query: {
+                            path: match.absolutePath,
+                            line: String(match.lineNumber),
+                          },
+                        }}
+                        className='text-xs font-mono hover:underline underline-offset-4'
+                      >
+                        {match.relativePath}:{match.lineNumber}
+                      </Link>
+
+                      <div className='flex items-center gap-1'>
+                        <CopyButton
+                          copyText={match.lineText}
+                          aria-label='Copy snippet'
+                          size='icon-sm'
+                        >
+                          <CopyIcon />
+                        </CopyButton>
+                        <CopyButton
+                          copyText={match.absolutePath}
+                          aria-label='Copy path'
+                          size='icon-sm'
+                        >
+                          <FolderSearchIcon />
+                        </CopyButton>
+                        <a
+                          href={`cursor://file/${encodeURIComponent(
+                            match.absolutePath,
+                          )}:${match.lineNumber}`}
+                          className='inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-xs hover:bg-accent'
+                        >
+                          Open in Cursor
+                        </a>
+                        <a
+                          href={`vscode://file/${encodeURIComponent(
+                            match.absolutePath,
+                          )}:${match.lineNumber}`}
+                          className='inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-xs hover:bg-accent'
+                        >
+                          Open in VS Code
+                        </a>
+                      </div>
+                    </div>
+                    <pre className='overflow-x-auto px-3 py-2 text-xs leading-relaxed'>
+                      <code>
+                        {highlightMatchedText(
+                          match.lineText,
+                          match.matchRanges,
+                        )}
+                      </code>
+                    </pre>
+                  </div>
+                ))}
+                {group.matches.length > 10 ? (
+                  <p className='text-xs text-muted-foreground'>
+                    Showing 10 of {group.matches.length} matches for this
+                    project.
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </>
+  )
+}

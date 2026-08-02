@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache'
 import {
   createSourceId,
   FIND_MIRROR_ROOT,
+  type FindConfig,
   type GitHubRepoSource,
   normalizeLocalPath,
   readFindConfig,
@@ -366,6 +367,10 @@ export async function searchCode(
   options: SearchOptions,
 ): Promise<SearchResponse> {
   return executeSearch(options)
+}
+
+export async function getFindConfig(): Promise<FindConfig> {
+  return readFindConfig()
 }
 
 // export function formatRepoSyncStatus(config: FindConfig): Record<string, string> {
