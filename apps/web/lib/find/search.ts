@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process'
 import { stat } from 'node:fs/promises'
 import path from 'node:path'
+import { z } from 'zod'
 import {
   FIND_MIRROR_ROOT,
   type FindConfig,
@@ -29,15 +30,17 @@ export type SearchSource = {
   kind: 'local' | 'github'
 }
 
-type RgMatchEvent = {
-  type: 'match'
-  data: {
-    path: { text: string }
-    lines: { text: string }
-    line_number: number
-    submatches: Array<{ start: number; end: number }>
-  }
-}
+const rgMatchEventSchema = z.object({
+  type: z.literal('match'),
+  data: z.object({
+    path: z.object({ text: z.string() }),
+    lines: z.object({ text: z.string() }),
+    line_number: z.number(),
+    submatches: z.array(z.object({ start: z.number(), end: z.number() })),
+  }),
+})
+
+type RgMatchEvent = z.infer<typeof rgMatchEventSchema>
 
 function normalizePathFilter(filter: string): string {
   return filter.trim().toLowerCase()
@@ -114,8 +117,8 @@ function projectNameFor(source: SearchSource, relativePath: string): string {
 
 function parseJsonLine(line: string): RgMatchEvent | null {
   try {
-    const parsed = JSON.parse(line) as { type?: string }
-    return parsed.type === 'match' ? (parsed as RgMatchEvent) : null
+    const result = rgMatchEventSchema.safeParse(JSON.parse(line))
+    return result.success ? result.data : null
   } catch {
     return null
   }
