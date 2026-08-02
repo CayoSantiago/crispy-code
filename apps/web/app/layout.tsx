@@ -2,6 +2,7 @@ import { Geist_Mono, Inter } from 'next/font/google'
 
 import '@repo/ui/globals.css'
 import { cn } from '@repo/ui/lib/utils'
+import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { highlightCss } from '@/lib/highlight'
 
@@ -31,9 +32,11 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning>
         <ThemeProvider>
-          {children}
-          {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
-          <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+          <Providers>
+            {children}
+            {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
+            <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+          </Providers>
         </ThemeProvider>
       </body>
     </html>
