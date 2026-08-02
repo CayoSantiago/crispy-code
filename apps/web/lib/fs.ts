@@ -1,4 +1,13 @@
-import { access, constants, mkdir, readFile, stat } from 'node:fs/promises'
+import {
+  access,
+  constants,
+  mkdir,
+  readdir,
+  readFile,
+  rm,
+  rmdir,
+  stat,
+} from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type z from 'zod'
@@ -32,6 +41,46 @@ export function normalizeLocalPath(raw: string): string {
   }
 
   return raw
+}
+
+/**
+ * Resolve `root/segments...` and return the absolute path only if it stays
+ * strictly inside `root` (not equal to root). Returns null on escape / empty.
+ */
+export function resolveUnderRoot(
+  root: string,
+  ...segments: string[]
+): string | null {
+  if (segments.some((segment) => segment.length === 0)) {
+    return null
+  }
+
+  const resolvedRoot = path.resolve(root)
+  const resolved = path.resolve(resolvedRoot, ...segments)
+  const prefix = resolvedRoot.endsWith(path.sep)
+    ? resolvedRoot
+    : `${resolvedRoot}${path.sep}`
+
+  if (resolved === resolvedRoot || !resolved.startsWith(prefix)) {
+    return null
+  }
+
+  return resolved
+}
+
+export async function removePathIfExists(target: string): Promise<void> {
+  await rm(target, { recursive: true, force: true })
+}
+
+export async function removeDirIfEmpty(dir: string): Promise<void> {
+  try {
+    const entries = await readdir(dir)
+    if (entries.length === 0) {
+      await rmdir(dir)
+    }
+  } catch {
+    // best-effort
+  }
 }
 
 export async function getParsedJsonFileData<T>(options: {

@@ -10,6 +10,7 @@ import {
   readFindConfig,
   updateFindConfig,
 } from '@/features/find/config/service'
+import { removeGitHubRepoFromConfigAndDisk } from '@/features/find/remove-github-repo'
 import {
   gitHubLookupOutputSchema,
   searchResponseSchema,
@@ -164,39 +165,63 @@ export const findRouter = {
       }),
     )
     .output(z.void())
-    .handler(async ({ input }) => {
+    .handler(async ({ input, errors }) => {
       const { repo, selected } = input
+
+      if (!selected) {
+        try {
+          await removeGitHubRepoFromConfigAndDisk({
+            id: repo.id,
+            owner: repo.owner,
+            repo: repo.repo,
+          })
+        } catch (error) {
+          throw errors.BAD_REQUEST({
+            message:
+              error instanceof Error
+                ? error.message
+                : 'Could not remove repository.',
+          })
+        }
+        return
+      }
 
       await updateFindConfig((current) => {
         const existing = current.githubRepos.find((item) => item.id === repo.id)
 
-        if (selected) {
-          if (existing) {
-            return current
-          }
+        if (existing) {
+          return current
+        }
 
-          const next: GitHubRepoSource = {
-            id: repo.id,
-            owner: repo.owner,
-            repo: repo.repo,
-            selectedAt: nowIso(),
-            syncedAt: null,
-            syncError: null,
-          }
-
-          return {
-            ...current,
-            githubRepos: [...current.githubRepos, next],
-          }
+        const next: GitHubRepoSource = {
+          id: repo.id,
+          owner: repo.owner,
+          repo: repo.repo,
+          selectedAt: nowIso(),
+          syncedAt: null,
+          syncError: null,
         }
 
         return {
           ...current,
-          githubRepos: current.githubRepos.filter(
-            (item) => item.id !== repo.id,
-          ),
+          githubRepos: [...current.githubRepos, next],
         }
       })
+    }),
+  removeGitHubRepo: base
+    .input(z.object({ id: z.string().min(1) }))
+    .output(z.void())
+    .handler(async ({ input, errors }) => {
+      try {
+        await removeGitHubRepoFromConfigAndDisk({ id: input.id })
+      } catch (error) {
+        throw errors.BAD_REQUEST({
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Could not remove repository.',
+        })
+      }
     }),
   syncSelectedGitHubRepos: base
     .input(z.void())
