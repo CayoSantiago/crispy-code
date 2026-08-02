@@ -1,8 +1,8 @@
-import type { SearchOptions } from '@/lib/find/search'
 import {
   type SearchResponse,
   searchResponseSchema,
-} from '@/lib/find/search-schema'
+} from '@/features/find/schemas'
+import type { SearchOptions } from '@/features/find/search'
 
 export type { SearchResponse }
 

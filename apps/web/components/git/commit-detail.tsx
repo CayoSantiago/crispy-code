@@ -9,7 +9,7 @@ import {
 import { notFound } from 'next/navigation'
 import { FileDiff } from '@/components/git/file-diff'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
-import { getCommit } from '@/lib/github/commits'
+import { getCommit } from '@/features/github/commits'
 
 // GitHub caps the files array in a commit response at 300 entries.
 const FILE_LIMIT = 300

@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server'
-import { searchRequestSchema } from '@/lib/find/search-schema'
-import { executeSearch } from '@/lib/find/search-service'
+import { searchRequestSchema } from '@/features/find/schemas'
+import { executeSearch } from '@/features/find/service'
 import { formatIssues } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {

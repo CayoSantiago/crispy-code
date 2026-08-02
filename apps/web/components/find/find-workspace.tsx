@@ -44,14 +44,12 @@ import {
   setGitHubRepoSelection,
 } from '@/app/find/actions'
 import { CopyButton } from '@/components/copy-button'
-import type { FindConfig } from '@/lib/find/config'
-import { findKeys } from '@/lib/find/keys'
-import type { SearchOptions } from '@/lib/find/search'
-import {
-  fetchSearchResults,
-  type SearchResponse,
-} from '@/lib/find/search-client'
-import { GitHubMirrorSyncCard } from './github-mirror-sync-card'
+import { GitHubMirrorSyncCard } from '@/components/find/github-mirror-sync-card'
+import { fetchSearchResults } from '@/features/find/client'
+import type { FindConfig } from '@/features/find/config/schemas'
+import { findKeys } from '@/features/find/keys'
+import type { SearchResponse } from '@/features/find/schemas'
+import type { SearchOptions } from '@/features/find/search'
 
 const ALL_SOURCES_VALUE = '__all_sources__'
 const emptyConfig: FindConfig = {
@@ -101,10 +99,12 @@ function highlightMatchedText(
 
 export function FindWorkspace() {
   const queryClient = useQueryClient()
+
   const configQuery = useQuery({
     queryKey: findKeys.config(),
-    queryFn: () => getFindConfig(),
+    queryFn: getFindConfig,
   })
+
   const addLocalRootMutation = useMutation({
     mutationFn: (formData: FormData) => addLocalRoot(formData),
     onSuccess: async (result) => {

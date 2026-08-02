@@ -3,19 +3,21 @@
 import { access, constants, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
+import { FIND_MIRROR_ROOT } from '@/features/find/config/data'
+import type {
+  FindConfig,
+  GitHubRepoSource,
+} from '@/features/find/config/schemas'
 import {
-  createSourceId,
-  FIND_MIRROR_ROOT,
-  type FindConfig,
-  type GitHubRepoSource,
-  normalizeLocalPath,
   readFindConfig,
   updateFindConfig,
-} from '@/lib/find/config'
+} from '@/features/find/config/service'
+import { createSourceId } from '@/features/find/utils'
+import { fetchGitHub } from '@/features/github/client'
+import { gitHubRepoLookupListSchema } from '@/features/github/schemas'
+import type { GitHubRepoLookupItem } from '@/features/github/types'
+import { normalizeLocalPath } from '@/lib/fs'
 import { runGit } from '@/lib/git'
-import { fetchGitHub } from '@/lib/github/client'
-import { gitHubRepoLookupListSchema } from '@/lib/github/schemas'
-import type { GitHubRepoLookupItem } from '@/lib/github/types'
 
 export type SourceActionState = {
   error?: string

@@ -3,7 +3,7 @@
 import type { Route } from 'next'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
-import { parseRepoInput } from '@/lib/github/parse-repo-input'
+import { parseRepoInput } from '@/features/github/parse-repo-input'
 
 export type ConnectRepoState = { error?: string }
 

@@ -1,8 +1,8 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { CodeBlock } from '@/components/code-block'
-import { languageForFilename } from '@/lib/diff/language-for-filename'
-import { parsePatch } from '@/lib/diff/parse-patch'
-import type { GitHubCommitFile } from '@/lib/github/types'
+import { languageForFilename } from '@/features/diff/language-for-filename'
+import { parsePatch } from '@/features/diff/parse-patch'
+import type { GitHubCommitFile } from '@/features/github/types'
 import { highlighter } from '@/lib/highlight'
 
 export function FileDiff({ file }: { file: GitHubCommitFile }) {

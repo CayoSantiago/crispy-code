@@ -3,16 +3,16 @@ import {
   HydrationBoundary,
   QueryClient,
 } from '@tanstack/react-query'
-import { getFindConfigData } from '@/app/find/data'
 import { FindWorkspace } from '@/components/find/find-workspace'
-import { findKeys } from '@/lib/find/keys'
+import { readFindConfig } from '@/features/find/config/service'
+import { findKeys } from '@/features/find/keys'
 
 export default async function FindPage() {
   const queryClient = new QueryClient()
 
   await queryClient.prefetchQuery({
     queryKey: findKeys.config(),
-    queryFn: getFindConfigData,
+    queryFn: readFindConfig,
   })
 
   return (

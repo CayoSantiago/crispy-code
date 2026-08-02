@@ -15,8 +15,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
-import { COMMITS_PER_PAGE, getCommits } from '@/lib/github/commits'
-import type { GitHubCommitSummary } from '@/lib/github/types'
+import { COMMITS_PER_PAGE, getCommits } from '@/features/github/commits'
+import type { GitHubCommitSummary } from '@/features/github/types'
 
 const pageSchema = z.coerce.number().int().positive().catch(1)
 

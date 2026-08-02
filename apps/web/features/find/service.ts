@@ -1,15 +1,15 @@
 import {
-  addRecentSearches,
   readFindConfig,
   updateFindConfig,
-} from '@/lib/find/config'
+} from '@/features/find/config/service'
+import type { SearchResponse } from '@/features/find/schemas'
 import {
   getSearchSources,
   groupMatchesByProject,
   type SearchOptions,
   searchAcrossSources,
-} from '@/lib/find/search'
-import type { SearchResponse } from '@/lib/find/search-schema'
+} from '@/features/find/search'
+import { MAX_RECENT_SEARCHES } from './config/schemas'
 
 export type { SearchResponse }
 
@@ -60,4 +60,17 @@ export async function executeSearch(
     })),
     recentSearches: updated.recentSearches,
   }
+}
+
+function addRecentSearches(existing: string[], query: string): string[] {
+  const trimmed = query.trim()
+
+  if (!trimmed) {
+    return existing
+  }
+
+  return [trimmed, ...existing.filter((value) => value !== trimmed)].slice(
+    0,
+    MAX_RECENT_SEARCHES,
+  )
 }

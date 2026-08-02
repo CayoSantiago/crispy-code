@@ -1,14 +1,14 @@
 import { spawn } from 'node:child_process'
-import { stat } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
-import {
-  FIND_MIRROR_ROOT,
-  type FindConfig,
-  type GitHubRepoSource,
-  type LocalRootSource,
-} from './config'
-import type { SearchMatch, SearchMode } from './search-schema'
+import type {
+  FindConfig,
+  GitHubRepoSource,
+  LocalRootSource,
+} from '@/features/find/config/schemas'
+import { pathExists } from '@/lib/fs'
+import { FIND_MIRROR_ROOT } from './config/data'
+import type { SearchMatch, SearchMode } from './schemas'
 
 export type { SearchMatch, SearchMode }
 
@@ -54,15 +54,6 @@ function normalizeExtension(extension: string): string {
   }
 
   return normalized.startsWith('.') ? normalized : `.${normalized}`
-}
-
-async function pathExists(inputPath: string): Promise<boolean> {
-  try {
-    await stat(inputPath)
-    return true
-  } catch {
-    return false
-  }
 }
 
 function sourceFromLocal(localRoot: LocalRootSource): SearchSource {

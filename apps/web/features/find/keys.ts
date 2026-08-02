@@ -1,4 +1,4 @@
-import type { SearchOptions } from '@/lib/find/search'
+import type { SearchOptions } from '@/features/find/search'
 
 export const findKeys = {
   all: ['find'] as const,

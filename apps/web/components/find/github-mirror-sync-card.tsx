@@ -16,7 +16,7 @@ import {
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { getFindConfig, syncSelectedGitHubRepos } from '@/app/find/actions'
-import { findKeys } from '@/lib/find/keys'
+import { findKeys } from '@/features/find/keys'
 
 export function GitHubMirrorSyncCard() {
   const queryClient = useQueryClient()

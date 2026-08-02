@@ -4,8 +4,9 @@ import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
 import { CodeBlock } from '@/components/code-block'
-import { languageForFilename } from '@/lib/diff/language-for-filename'
-import { FIND_MIRROR_ROOT, readFindConfig } from '@/lib/find/config'
+import { languageForFilename } from '@/features/diff/language-for-filename'
+import { FIND_MIRROR_ROOT } from '@/features/find/config/data'
+import { readFindConfig } from '@/features/find/config/service'
 import { highlighter } from '@/lib/highlight'
 
 const fileParamsSchema = z.object({

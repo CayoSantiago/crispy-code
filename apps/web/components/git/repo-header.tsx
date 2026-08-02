@@ -1,7 +1,7 @@
 import { Badge } from '@repo/ui/components/badge'
 import { StarIcon } from 'lucide-react'
 import { notFound } from 'next/navigation'
-import { getRepo } from '@/lib/github/commits'
+import { getRepo } from '@/features/github/commits'
 
 export async function RepoHeader({
   params,
