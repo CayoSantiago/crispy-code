@@ -13,8 +13,6 @@ import {
   readFindConfig,
   updateFindConfig,
 } from '@/lib/find/config'
-import type { SearchOptions } from '@/lib/find/search'
-import { executeSearch, type SearchResponse } from '@/lib/find/search-service'
 import { fetchGitHub } from '@/lib/github/client'
 
 type GitHubRepoLookupItem = {
@@ -53,8 +51,6 @@ export type SyncResult = {
   ok: boolean
   message: string
 }
-
-export type { SearchResponse } from '@/lib/find/search-service'
 
 function nowIso(): string {
   return new Date().toISOString()
@@ -361,12 +357,6 @@ export async function syncSelectedGitHubRepos(): Promise<SyncResult[]> {
 
   revalidatePath('/find')
   return results
-}
-
-export async function searchCode(
-  options: SearchOptions,
-): Promise<SearchResponse> {
-  return executeSearch(options)
 }
 
 export async function getFindConfig(): Promise<FindConfig> {

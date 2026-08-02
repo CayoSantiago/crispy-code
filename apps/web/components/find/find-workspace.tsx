@@ -22,7 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@repo/ui/components/select'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 import {
   CopyIcon,
   FolderSearchIcon,
@@ -42,9 +46,7 @@ import {
   getFindConfig,
   lookupGitHubRepos,
   removeLocalRoot,
-  type SearchResponse,
   type SourceActionState,
-  searchCode,
   setGitHubRepoSelection,
   syncSelectedGitHubRepos,
 } from '@/app/find/actions'
@@ -52,6 +54,10 @@ import { CopyButton } from '@/components/copy-button'
 import type { FindConfig } from '@/lib/find/config'
 import { findKeys } from '@/lib/find/keys'
 import type { SearchOptions } from '@/lib/find/search'
+import {
+  fetchSearchResults,
+  type SearchResponse,
+} from '@/lib/find/search-client'
 
 const initialSourceState: SourceActionState = {}
 const ALL_SOURCES_VALUE = '__all_sources__'
@@ -123,55 +129,53 @@ export function FindWorkspace() {
   const [extension, setExtension] = useState('')
   const [pathFilter, setPathFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
-  const [searchResponse, setSearchResponse] = useState<SearchResponse | null>(
-    null,
-  )
+  const [debouncedQuery, setDebouncedQuery] = useState('')
   const [syncMessages, setSyncMessages] = useState<Record<string, string>>({})
 
   const [isRepoLookupPending, startRepoLookup] = useTransition()
   const [isRepoSelectionPending, startRepoSelection] = useTransition()
   const [isSyncPending, startSync] = useTransition()
-  const [isSearchPending, startSearch] = useTransition()
   const [isRemovingLocalRoot, startLocalRootRemove] = useTransition()
 
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResponse(null)
+    const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 220)
+    return () => clearTimeout(timeout)
+  }, [searchQuery])
+
+  const searchParams: SearchOptions = {
+    query: debouncedQuery.trim(),
+    mode: searchMode,
+    caseSensitive,
+    wholeWord,
+    extension,
+    pathFilter,
+    sourceFilter,
+    maxResultsPerSource: 50,
+  }
+
+  const searchResult = useQuery({
+    queryKey: findKeys.search(searchParams),
+    queryFn: ({ signal }) => fetchSearchResults(searchParams, signal),
+    enabled: searchParams.query.length > 0,
+    placeholderData: keepPreviousData,
+  })
+
+  const searchResponse: SearchResponse | null = searchParams.query
+    ? (searchResult.data ?? null)
+    : null
+  const isSearchPending = searchResult.isFetching
+
+  const latestRecentSearches = searchResult.data?.recentSearches
+
+  useEffect(() => {
+    if (!latestRecentSearches) {
       return
     }
 
-    const timeout = setTimeout(() => {
-      startSearch(async () => {
-        const response = await searchCode({
-          query: searchQuery,
-          mode: searchMode,
-          caseSensitive,
-          wholeWord,
-          extension,
-          pathFilter,
-          sourceFilter,
-          maxResultsPerSource: 50,
-        })
-        setSearchResponse(response)
-        queryClient.setQueryData<FindConfig>(findKeys.config(), (current) =>
-          current
-            ? { ...current, recentSearches: response.recentSearches }
-            : current,
-        )
-      })
-    }, 220)
-
-    return () => clearTimeout(timeout)
-  }, [
-    caseSensitive,
-    extension,
-    pathFilter,
-    searchMode,
-    searchQuery,
-    sourceFilter,
-    wholeWord,
-    queryClient,
-  ])
+    queryClient.setQueryData<FindConfig>(findKeys.config(), (current) =>
+      current ? { ...current, recentSearches: latestRecentSearches } : current,
+    )
+  }, [latestRecentSearches, queryClient])
 
   const selectedRepos = useMemo(() => {
     return config.githubRepos.map((repo) => ({
@@ -506,6 +510,12 @@ export function FindWorkspace() {
               {searchResponse.missingSources
                 .map((source) => source.label)
                 .join(', ')}
+            </div>
+          ) : null}
+
+          {searchResult.error ? (
+            <div className='rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs'>
+              Search failed: {searchResult.error.message}
             </div>
           ) : null}
 
