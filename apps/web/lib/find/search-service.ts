@@ -20,11 +20,32 @@ export type SearchResponse = {
 
 export async function executeSearch(
   options: SearchOptions,
+  signal?: AbortSignal,
 ): Promise<SearchResponse> {
   const config = await readFindConfig()
   const sourceSet = await getSearchSources(config)
-  const matches = await searchAcrossSources(sourceSet.available, options)
+  const matches = await searchAcrossSources(
+    sourceSet.available,
+    options,
+    signal,
+  )
   const grouped = groupMatchesByProject(matches)
+
+  if (signal?.aborted) {
+    return {
+      groups: grouped,
+      totalMatches: matches.length,
+      missingSources: sourceSet.missing.map((source) => ({
+        id: source.id,
+        label: source.label,
+      })),
+      sourceOptions: sourceSet.available.map((source) => ({
+        id: source.id,
+        label: source.label,
+      })),
+      recentSearches: config.recentSearches,
+    }
+  }
 
   const updated = await updateFindConfig((current) => ({
     ...current,

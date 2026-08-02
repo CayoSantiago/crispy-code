@@ -3,7 +3,6 @@
 import { spawn } from 'node:child_process'
 import { access, constants, mkdir } from 'node:fs/promises'
 import path from 'node:path'
-import { revalidatePath } from 'next/cache'
 import {
   createSourceId,
   FIND_MIRROR_ROOT,
@@ -124,7 +123,6 @@ export async function addLocalRoot(
     }
   })
 
-  revalidatePath('/find')
   return { success: 'Added local source.' }
 }
 
@@ -133,7 +131,6 @@ export async function removeLocalRoot(id: string): Promise<void> {
     ...current,
     localRoots: current.localRoots.filter((item) => item.id !== id),
   }))
-  revalidatePath('/find')
 }
 
 export async function lookupGitHubRepos(
@@ -239,8 +236,6 @@ export async function setGitHubRepoSelection(
       githubRepos: current.githubRepos.filter((item) => item.id !== repo.id),
     }
   })
-
-  revalidatePath('/find')
 }
 
 export async function syncSelectedGitHubRepos(): Promise<SyncResult[]> {
@@ -342,7 +337,6 @@ export async function syncSelectedGitHubRepos(): Promise<SyncResult[]> {
     })
   }
 
-  revalidatePath('/find')
   return results
 }
 

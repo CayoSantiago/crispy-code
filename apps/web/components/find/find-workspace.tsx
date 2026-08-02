@@ -241,10 +241,17 @@ export function FindWorkspace() {
   }, [config.githubRepos, syncMessages])
 
   const hasNoSources =
-    config.localRoots.length === 0 && config.githubRepos.length === 0
+    configQuery.isSuccess &&
+    config.localRoots.length === 0 &&
+    config.githubRepos.length === 0
 
   return (
     <>
+      {configQuery.isError ? (
+        <div className='rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs'>
+          Failed to load your sources: {configQuery.error.message}
+        </div>
+      ) : null}
       <div className='grid gap-6 lg:grid-cols-2'>
         <Card>
           <CardHeader>

@@ -3,6 +3,13 @@ import type { SearchOptions } from '@/lib/find/search'
 import { executeSearch } from '@/lib/find/search-service'
 
 export async function GET(request: NextRequest) {
+  if (request.headers.get('sec-fetch-site') === 'cross-site') {
+    return Response.json(
+      { error: 'Cross-site requests are not allowed.' },
+      { status: 403 },
+    )
+  }
+
   const params = request.nextUrl.searchParams
   const query = params.get('query')?.trim() ?? ''
 
@@ -22,7 +29,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    return Response.json(await executeSearch(options))
+    return Response.json(await executeSearch(options, request.signal))
   } catch (error) {
     return Response.json(
       {

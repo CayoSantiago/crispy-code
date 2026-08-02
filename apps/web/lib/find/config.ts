@@ -28,6 +28,7 @@ export const FIND_CONFIG_PATH = path.join(FIND_HOME, 'config.json')
 export const FIND_MIRROR_ROOT = path.join(FIND_HOME, 'repos')
 
 const MAX_RECENT_SEARCHES = 8
+let updateQueue: Promise<unknown> = Promise.resolve()
 
 function normalizeConfig(input: unknown): FindConfig {
   const empty: FindConfig = {
@@ -109,10 +110,14 @@ export async function writeFindConfig(config: FindConfig): Promise<void> {
 export async function updateFindConfig(
   update: (current: FindConfig) => FindConfig,
 ): Promise<FindConfig> {
-  const current = await readFindConfig()
-  const next = normalizeConfig(update(current))
-  await writeFindConfig(next)
-  return next
+  const task = updateQueue.then(async () => {
+    const current = await readFindConfig()
+    const next = normalizeConfig(update(current))
+    await writeFindConfig(next)
+    return next
+  })
+  updateQueue = task.catch(() => undefined)
+  return task
 }
 
 export function createSourceId(owner: string, repo: string): string {

@@ -135,7 +135,12 @@ function parseJsonLine(line: string): RgMatchEvent | null {
 function runRipgrep(
   source: SearchSource,
   options: SearchOptions,
+  signal?: AbortSignal,
 ): Promise<SearchMatch[]> {
+  if (signal?.aborted) {
+    return Promise.resolve([])
+  }
+
   const extension = normalizeExtension(options.extension)
   const pathFilter = normalizePathFilter(options.pathFilter)
   const maxResults = options.maxResultsPerSource ?? 100
@@ -164,18 +169,27 @@ function runRipgrep(
     args.push('--glob', `*${extension}`)
   }
 
-  args.push(options.query)
+  args.push('--regexp', options.query)
 
   return new Promise((resolve, reject) => {
-    const process = spawn('rg', args, {
+    const child = spawn('rg', args, {
       cwd: source.rootPath,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     const results: SearchMatch[] = []
     let stdout = ''
     let stderr = ''
+    let didAbort = false
 
-    process.stdout.on('data', (chunk: Buffer) => {
+    const onAbort = () => {
+      didAbort = true
+      child.kill()
+      resolve([])
+    }
+
+    signal?.addEventListener('abort', onAbort)
+
+    child.stdout.on('data', (chunk: Buffer) => {
       stdout += chunk.toString('utf8')
       const lines = stdout.split('\n')
       stdout = lines.pop() ?? ''
@@ -211,13 +225,23 @@ function runRipgrep(
       }
     })
 
-    process.stderr.on('data', (chunk: Buffer) => {
+    child.stderr.on('data', (chunk: Buffer) => {
       stderr += chunk.toString('utf8')
     })
 
-    process.on('error', reject)
+    child.on('error', (error) => {
+      signal?.removeEventListener('abort', onAbort)
+      reject(error)
+    })
 
-    process.on('close', (code) => {
+    child.on('close', (code) => {
+      signal?.removeEventListener('abort', onAbort)
+
+      if (didAbort) {
+        resolve([])
+        return
+      }
+
       if (code === 0 || code === 1) {
         resolve(results)
         return
@@ -231,6 +255,7 @@ function runRipgrep(
 export async function searchAcrossSources(
   sources: SearchSource[],
   options: SearchOptions,
+  signal?: AbortSignal,
 ): Promise<SearchMatch[]> {
   const query = options.query.trim()
 
@@ -243,7 +268,7 @@ export async function searchAcrossSources(
     : sources
 
   const all = await Promise.all(
-    narrowed.map((source) => runRipgrep(source, options)),
+    narrowed.map((source) => runRipgrep(source, options, signal)),
   )
 
   return all
