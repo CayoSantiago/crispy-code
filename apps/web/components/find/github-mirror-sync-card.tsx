@@ -14,45 +14,40 @@ import {
   EmptyTitle,
 } from '@repo/ui/components/empty'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { getFindConfig, syncSelectedGitHubRepos } from '@/app/find/actions'
-import { findKeys } from '@/features/find/keys'
+import { useState } from 'react'
+import { orpc } from '@/lib/orpc/client'
 
 export function GitHubMirrorSyncCard() {
   const queryClient = useQueryClient()
 
-  const { data: githubRepos } = useQuery({
-    queryKey: findKeys.config(),
-    queryFn: () => getFindConfig(),
-    select: (data) => data.githubRepos,
-  })
+  const { data: githubRepos } = useQuery(
+    orpc.find.getConfig.queryOptions({
+      select: (data) => data.githubRepos,
+    }),
+  )
 
   const [syncMessages, setSyncMessages] = useState<Record<string, string>>({})
 
-  const syncMutation = useMutation({
-    mutationFn: () => syncSelectedGitHubRepos(),
-    onSuccess: async (results) => {
-      setSyncMessages(
-        Object.fromEntries(
-          results.map((result) => [
-            result.id,
-            result.ok ? 'Synced' : `Failed: ${result.message}`,
-          ]),
-        ),
-      )
-      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
-      await queryClient.invalidateQueries({ queryKey: findKeys.searches() })
-    },
-  })
-
-  const selectedRepos = useMemo(() => {
-    return (
-      githubRepos?.map((repo) => ({
-        ...repo,
-        message: syncMessages[repo.id] ?? 'Idle',
-      })) ?? []
-    )
-  }, [githubRepos, syncMessages])
+  const syncMutation = useMutation(
+    orpc.find.syncSelectedGitHubRepos.mutationOptions({
+      onSuccess: async (results) => {
+        setSyncMessages(
+          Object.fromEntries(
+            results.map((result) => [
+              result.id,
+              result.ok ? 'Synced' : `Failed: ${result.message}`,
+            ]),
+          ),
+        )
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.getConfig.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.search.key(),
+        })
+      },
+    }),
+  )
 
   return (
     <Card>
@@ -68,15 +63,15 @@ export function GitHubMirrorSyncCard() {
           {syncMutation.isPending ? 'Syncing...' : 'Sync selected repositories'}
         </Button>
 
-        {selectedRepos.length ? (
+        {githubRepos?.length ? (
           <div className='grid gap-2'>
-            {selectedRepos.map((repo) => (
+            {githubRepos.map((repo) => (
               <div key={repo.id} className='rounded-md border p-3'>
                 <p className='font-mono text-xs'>
                   {repo.owner}/{repo.repo}
                 </p>
                 <p className='text-xs text-muted-foreground mt-1'>
-                  {repo.message}
+                  {syncMessages[repo.id] ?? 'Idle'}
                 </p>
               </div>
             ))}

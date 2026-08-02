@@ -4,16 +4,13 @@ import {
   QueryClient,
 } from '@tanstack/react-query'
 import { FindWorkspace } from '@/components/find/find-workspace'
-import { readFindConfig } from '@/features/find/config/service'
-import { findKeys } from '@/features/find/keys'
+import { orpc } from '@/lib/orpc/client'
+import '@/lib/orpc/client.server'
 
 export default async function FindPage() {
   const queryClient = new QueryClient()
 
-  await queryClient.prefetchQuery({
-    queryKey: findKeys.config(),
-    queryFn: readFindConfig,
-  })
+  await queryClient.prefetchQuery(orpc.find.getConfig.queryOptions())
 
   return (
     <div className='grid gap-6 w-full'>

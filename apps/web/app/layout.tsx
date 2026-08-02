@@ -5,6 +5,7 @@ import { cn } from '@repo/ui/lib/utils'
 import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { highlightCss } from '@/lib/highlight'
+import '@/lib/orpc/client.server'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 

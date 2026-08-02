@@ -2,15 +2,12 @@ import { z } from 'zod'
 
 export const searchModeSchema = z.enum(['literal', 'regex'])
 
-export const searchRequestSchema = z.object({
-  query: z.string().trim().min(1, 'Missing query parameter.'),
+/** RPC search input with real booleans. */
+export const searchRpcInputSchema = z.object({
+  query: z.string().trim().min(1, 'Missing query.'),
   mode: searchModeSchema.default('literal'),
-  caseSensitive: z
-    .stringbool({ truthy: ['true'], falsy: ['false'] })
-    .default(false),
-  wholeWord: z
-    .stringbool({ truthy: ['true'], falsy: ['false'] })
-    .default(false),
+  caseSensitive: z.boolean().default(false),
+  wholeWord: z.boolean().default(false),
   extension: z.string().default(''),
   pathFilter: z.string().default(''),
   sourceFilter: z.string().default(''),
@@ -46,7 +43,26 @@ export const searchResponseSchema = z.object({
   recentSearches: z.array(z.string()),
 })
 
+export const gitHubRepoPickSchema = z.object({
+  id: z.string(),
+  owner: z.string(),
+  repo: z.string(),
+  selected: z.boolean(),
+})
+
+export const gitHubLookupOutputSchema = z.object({
+  repos: z.array(gitHubRepoPickSchema),
+})
+
+export const syncResultSchema = z.object({
+  id: z.string(),
+  ok: z.boolean(),
+  message: z.string(),
+})
+
 export type SearchMode = z.infer<typeof searchModeSchema>
-export type SearchRequest = z.infer<typeof searchRequestSchema>
+export type SearchRpcInput = z.infer<typeof searchRpcInputSchema>
 export type SearchMatch = z.infer<typeof searchMatchSchema>
 export type SearchResponse = z.infer<typeof searchResponseSchema>
+export type GitHubRepoPick = z.infer<typeof gitHubRepoPickSchema>
+export type SyncResult = z.infer<typeof syncResultSchema>

@@ -1,5 +1,6 @@
 'use client'
 
+import { isDefinedError } from '@orpc/client'
 import { Button } from '@repo/ui/components/button'
 import {
   Card,
@@ -7,220 +8,107 @@ import {
   CardHeader,
   CardTitle,
 } from '@repo/ui/components/card'
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyTitle,
-} from '@repo/ui/components/empty'
 import { Field, FieldError, FieldLabel } from '@repo/ui/components/field'
 import { Input } from '@repo/ui/components/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@repo/ui/components/select'
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from '@tanstack/react-query'
-import {
-  CopyIcon,
-  FolderSearchIcon,
-  LoaderCircleIcon,
-  Trash2Icon,
-} from 'lucide-react'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
-import {
-  addLocalRoot,
-  getFindConfig,
-  lookupGitHubRepos,
-  removeLocalRoot,
-  setGitHubRepoSelection,
-} from '@/app/find/actions'
-import { CopyButton } from '@/components/copy-button'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Trash2Icon } from 'lucide-react'
+import { useState } from 'react'
 import { GitHubMirrorSyncCard } from '@/components/find/github-mirror-sync-card'
-import { fetchSearchResults } from '@/features/find/client'
 import type { FindConfig } from '@/features/find/config/schemas'
-import { findKeys } from '@/features/find/keys'
-import type { SearchResponse } from '@/features/find/schemas'
-import type { SearchOptions } from '@/features/find/search'
+import type { GitHubRepoPick } from '@/features/find/schemas'
+import { orpc } from '@/lib/orpc/client'
+import { SearchCard } from './search-card'
 
-const ALL_SOURCES_VALUE = '__all_sources__'
 const emptyConfig: FindConfig = {
   localRoots: [],
   githubRepos: [],
   recentSearches: [],
 }
 
-function highlightMatchedText(
-  input: string,
-  ranges: Array<{ start: number; end: number }>,
-) {
-  if (!ranges.length) {
-    return input
-  }
-
-  const parts: React.ReactNode[] = []
-  let cursor = 0
-
-  for (const [index, range] of ranges.entries()) {
-    if (range.start > cursor) {
-      parts.push(
-        <span key={`plain-${index}-${cursor}`}>
-          {input.slice(cursor, range.start)}
-        </span>,
-      )
-    }
-
-    parts.push(
-      <mark
-        key={`match-${index}-${range.start}`}
-        className='bg-amber-200 text-foreground px-0.5 rounded-sm dark:bg-amber-700/70'
-      >
-        {input.slice(range.start, range.end)}
-      </mark>,
-    )
-
-    cursor = range.end
-  }
-
-  if (cursor < input.length) {
-    parts.push(<span key='plain-tail'>{input.slice(cursor)}</span>)
-  }
-
-  return parts
-}
-
 export function FindWorkspace() {
   const queryClient = useQueryClient()
 
-  const configQuery = useQuery({
-    queryKey: findKeys.config(),
-    queryFn: getFindConfig,
-  })
+  const configQuery = useQuery(orpc.find.getConfig.queryOptions())
 
-  const addLocalRootMutation = useMutation({
-    mutationFn: (formData: FormData) => addLocalRoot(formData),
-    onSuccess: async (result) => {
-      if (!result.error) {
-        await queryClient.invalidateQueries({ queryKey: findKeys.config() })
-      }
-    },
-  })
+  const addLocalRootMutation = useMutation(
+    orpc.find.addLocalRoot.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.getConfig.key(),
+        })
+      },
+    }),
+  )
 
-  const removeLocalRootMutation = useMutation({
-    mutationFn: (id: string) => removeLocalRoot(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
-      await queryClient.invalidateQueries({ queryKey: findKeys.searches() })
-    },
-  })
+  const removeLocalRootMutation = useMutation(
+    orpc.find.removeLocalRoot.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.getConfig.key(),
+        })
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.search.key(),
+        })
+      },
+    }),
+  )
 
-  const repoLookupMutation = useMutation({
-    mutationFn: (owner: string) => lookupGitHubRepos(owner),
-    onSuccess: (result) => {
-      if (result.status !== 'ok') {
-        if (result.status === 'rate-limited') {
-          setRepoLookupError(
-            result.resetAt
-              ? `Rate limited until ${new Date(result.resetAt).toLocaleTimeString()}.`
-              : 'Rate limited by GitHub. Try again soon.',
-          )
-        } else {
-          setRepoLookupError(result.message ?? 'Could not load repositories.')
-        }
+  const repoLookupMutation = useMutation(
+    orpc.find.lookupGitHubRepos.mutationOptions({
+      onSuccess: (result) => {
+        setRepoLookupError(null)
+        setRepoResults(result.repos)
+      },
+      onError: (error) => {
         setRepoResults([])
-        return
-      }
+        if (isDefinedError(error)) {
+          if (error.code === 'RATE_LIMITED') {
+            setRepoLookupError(
+              error.data.resetAt
+                ? `Rate limited until ${new Date(error.data.resetAt).toLocaleTimeString()}.`
+                : 'Rate limited by GitHub. Try again soon.',
+            )
+            return
+          }
+          setRepoLookupError(error.message || 'Could not load repositories.')
+          return
+        }
+        setRepoLookupError(
+          error instanceof Error
+            ? error.message
+            : 'Could not load repositories.',
+        )
+      },
+    }),
+  )
 
-      setRepoLookupError(null)
-      setRepoResults(result.repos)
-    },
-  })
-
-  const repoSelectionMutation = useMutation({
-    mutationFn: ({
-      repo,
-      selected,
-    }: {
-      repo: { id: string; owner: string; repo: string }
-      selected: boolean
-    }) => setGitHubRepoSelection(repo, selected),
-    onSuccess: async (_data, { repo, selected }) => {
-      setRepoResults((current) =>
-        current.map((item) =>
-          item.id === repo.id ? { ...item, selected } : item,
-        ),
-      )
-      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
-    },
-  })
+  const repoSelectionMutation = useMutation(
+    orpc.find.setGitHubRepoSelection.mutationOptions({
+      onSuccess: async (_data, { repo, selected }) => {
+        setRepoResults((current) =>
+          current.map((item) =>
+            item.id === repo.id ? { ...item, selected } : item,
+          ),
+        )
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.getConfig.key(),
+        })
+      },
+    }),
+  )
 
   const config = configQuery.data ?? emptyConfig
   const [repoOwner, setRepoOwner] = useState('')
   const [repoLookupError, setRepoLookupError] = useState<string | null>(null)
-  const [repoResults, setRepoResults] = useState<
-    Array<{ id: string; owner: string; repo: string; selected: boolean }>
-  >([])
-  const [searchQuery, setSearchQuery] = useState('')
-  const [searchMode, setSearchMode] = useState<SearchOptions['mode']>('literal')
-  const [caseSensitive, setCaseSensitive] = useState(false)
-  const [wholeWord, setWholeWord] = useState(false)
-  const [extension, setExtension] = useState('')
-  const [pathFilter, setPathFilter] = useState('')
-  const [sourceFilter, setSourceFilter] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
+  const [repoResults, setRepoResults] = useState<GitHubRepoPick[]>([])
 
-  useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 220)
-    return () => clearTimeout(timeout)
-  }, [searchQuery])
-
-  const searchParams: SearchOptions = {
-    query: debouncedQuery.trim(),
-    mode: searchMode,
-    caseSensitive,
-    wholeWord,
-    extension,
-    pathFilter,
-    sourceFilter,
-    maxResultsPerSource: 50,
-  }
-
-  const searchResult = useQuery({
-    queryKey: findKeys.search(searchParams),
-    queryFn: ({ signal }) => fetchSearchResults(searchParams, signal),
-    enabled: searchParams.query.length > 0,
-    placeholderData: keepPreviousData,
-  })
-
-  const searchResponse: SearchResponse | null = searchQuery.trim()
-    ? (searchResult.data ?? null)
+  const addLocalRootError = addLocalRootMutation.isError
+    ? isDefinedError(addLocalRootMutation.error)
+      ? addLocalRootMutation.error.message
+      : addLocalRootMutation.error instanceof Error
+        ? addLocalRootMutation.error.message
+        : 'Enter a local project folder.'
     : null
-  const isSearchPending = searchResult.isFetching
-
-  const latestRecentSearches = searchResult.data?.recentSearches
-
-  useEffect(() => {
-    if (!latestRecentSearches) {
-      return
-    }
-
-    queryClient.setQueryData<FindConfig>(findKeys.config(), (current) =>
-      current ? { ...current, recentSearches: latestRecentSearches } : current,
-    )
-  }, [latestRecentSearches, queryClient])
-
-  const hasNoSources =
-    configQuery.isSuccess &&
-    config.localRoots.length === 0 &&
-    config.githubRepos.length === 0
 
   return (
     <>
@@ -239,13 +127,16 @@ export function FindWorkspace() {
               onSubmit={(event) => {
                 event.preventDefault()
                 const form = event.currentTarget
-                addLocalRootMutation.mutate(new FormData(form), {
-                  onSuccess: (result) => {
-                    if (!result.error) {
+                const formData = new FormData(form)
+                const localPath = String(formData.get('localPath') ?? '')
+                addLocalRootMutation.mutate(
+                  { localPath },
+                  {
+                    onSuccess: () => {
                       form.reset()
-                    }
+                    },
                   },
-                })
+                )
               }}
               className='grid gap-3'
             >
@@ -258,8 +149,8 @@ export function FindWorkspace() {
                   required
                   autoComplete='off'
                 />
-                {addLocalRootMutation.data?.error ? (
-                  <FieldError>{addLocalRootMutation.data.error}</FieldError>
+                {addLocalRootError ? (
+                  <FieldError>{addLocalRootError}</FieldError>
                 ) : null}
               </Field>
               <Button type='submit' disabled={addLocalRootMutation.isPending}>
@@ -281,7 +172,9 @@ export function FindWorkspace() {
                       variant='ghost'
                       size='icon-sm'
                       disabled={removeLocalRootMutation.isPending}
-                      onClick={() => removeLocalRootMutation.mutate(root.id)}
+                      onClick={() =>
+                        removeLocalRootMutation.mutate({ id: root.id })
+                      }
                     >
                       <Trash2Icon />
                       <span className='sr-only'>Remove local source</span>
@@ -310,7 +203,7 @@ export function FindWorkspace() {
                 disabled={repoLookupMutation.isPending}
                 onClick={() => {
                   setRepoLookupError(null)
-                  repoLookupMutation.mutate(repoOwner)
+                  repoLookupMutation.mutate({ ownerOrOrg: repoOwner })
                 }}
               >
                 {repoLookupMutation.isPending
@@ -357,249 +250,7 @@ export function FindWorkspace() {
         <GitHubMirrorSyncCard />
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Search</CardTitle>
-        </CardHeader>
-        <CardContent className='grid gap-4'>
-          {hasNoSources ? (
-            <Empty className='border rounded-md'>
-              <EmptyHeader>
-                <EmptyTitle>Start by adding a source</EmptyTitle>
-                <EmptyDescription>
-                  Add a local folder or select GitHub repositories, then search
-                  across all your code.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : null}
-
-          <div className='grid gap-3 md:grid-cols-2 xl:grid-cols-3'>
-            <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder='Search code...'
-              autoComplete='off'
-            />
-
-            <Select
-              value={searchMode}
-              onValueChange={(value) =>
-                setSearchMode(value as SearchOptions['mode'])
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='literal'>Literal search</SelectItem>
-                <SelectItem value='regex'>Regex search</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={sourceFilter || ALL_SOURCES_VALUE}
-              onValueChange={(value) =>
-                setSourceFilter(
-                  value === ALL_SOURCES_VALUE ? '' : (value ?? ''),
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='All sources' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_SOURCES_VALUE}>All sources</SelectItem>
-                {searchResponse?.sourceOptions?.map((source) => (
-                  <SelectItem key={source.id} value={source.id}>
-                    {source.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              value={extension}
-              onChange={(event) => setExtension(event.target.value)}
-              placeholder='Extension filter (ts,tsx,py)'
-            />
-
-            <Input
-              value={pathFilter}
-              onChange={(event) => setPathFilter(event.target.value)}
-              placeholder='Path contains...'
-            />
-
-            <div className='flex items-center gap-2 text-xs'>
-              <label className='inline-flex items-center gap-1'>
-                <input
-                  type='checkbox'
-                  checked={caseSensitive}
-                  onChange={(event) => setCaseSensitive(event.target.checked)}
-                />
-                Case sensitive
-              </label>
-              <label className='inline-flex items-center gap-1'>
-                <input
-                  type='checkbox'
-                  checked={wholeWord}
-                  onChange={(event) => setWholeWord(event.target.checked)}
-                />
-                Whole word
-              </label>
-            </div>
-          </div>
-
-          {config.recentSearches.length ? (
-            <div className='flex flex-wrap gap-2 items-center'>
-              <span className='text-xs text-muted-foreground'>Recent:</span>
-              {config.recentSearches.map((recent) => (
-                <Button
-                  key={recent}
-                  type='button'
-                  variant='outline'
-                  size='sm'
-                  className='h-7 text-xs'
-                  onClick={() => setSearchQuery(recent)}
-                >
-                  {recent}
-                </Button>
-              ))}
-            </div>
-          ) : null}
-
-          {searchResponse?.missingSources.length ? (
-            <div className='rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-xs'>
-              Missing sources:{' '}
-              {searchResponse.missingSources
-                .map((source) => source.label)
-                .join(', ')}
-            </div>
-          ) : null}
-
-          {searchResult.error ? (
-            <div className='rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs'>
-              Search failed: {searchResult.error.message}
-            </div>
-          ) : null}
-
-          {isSearchPending ? (
-            <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-              <LoaderCircleIcon className='size-3.5 animate-spin' />
-              Searching...
-            </div>
-          ) : null}
-
-          {!searchResponse && searchQuery ? (
-            <Empty>
-              <EmptyHeader>
-                <EmptyTitle>Searching...</EmptyTitle>
-              </EmptyHeader>
-            </Empty>
-          ) : null}
-
-          {searchResponse && searchResponse.totalMatches === 0 ? (
-            <Empty className='border rounded-md'>
-              <EmptyHeader>
-                <EmptyTitle>No matches</EmptyTitle>
-                <EmptyDescription>
-                  Try broadening the query, removing filters, or syncing GitHub
-                  repositories.
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : null}
-
-          {searchResponse?.groups.map((group) => (
-            <div
-              key={`${group.sourceId}:${group.projectName}`}
-              className='grid gap-2'
-            >
-              <div className='flex items-center justify-between'>
-                <h3 className='text-sm font-semibold'>
-                  {group.projectName}{' '}
-                  <span className='text-muted-foreground font-normal'>
-                    ({group.matches.length})
-                  </span>
-                </h3>
-                <span className='text-xs text-muted-foreground'>
-                  {group.sourceLabel}
-                </span>
-              </div>
-              <div className='grid gap-2'>
-                {group.matches.slice(0, 10).map((match) => (
-                  <div
-                    key={`${match.absolutePath}:${match.lineNumber}`}
-                    className='rounded-md border bg-card'
-                  >
-                    <div className='flex items-center justify-between border-b px-3 py-2'>
-                      <Link
-                        href={{
-                          pathname: '/find/file',
-                          query: {
-                            path: match.absolutePath,
-                            line: String(match.lineNumber),
-                          },
-                        }}
-                        className='text-xs font-mono hover:underline underline-offset-4'
-                      >
-                        {match.relativePath}:{match.lineNumber}
-                      </Link>
-
-                      <div className='flex items-center gap-1'>
-                        <CopyButton
-                          copyText={match.lineText}
-                          aria-label='Copy snippet'
-                          size='icon-sm'
-                        >
-                          <CopyIcon />
-                        </CopyButton>
-                        <CopyButton
-                          copyText={match.absolutePath}
-                          aria-label='Copy path'
-                          size='icon-sm'
-                        >
-                          <FolderSearchIcon />
-                        </CopyButton>
-                        <a
-                          href={`cursor://file/${encodeURIComponent(
-                            match.absolutePath,
-                          )}:${match.lineNumber}`}
-                          className='inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-xs hover:bg-accent'
-                        >
-                          Open in Cursor
-                        </a>
-                        <a
-                          href={`vscode://file/${encodeURIComponent(
-                            match.absolutePath,
-                          )}:${match.lineNumber}`}
-                          className='inline-flex items-center rounded-md border border-input bg-background px-2 py-1 text-xs font-medium shadow-xs hover:bg-accent'
-                        >
-                          Open in VS Code
-                        </a>
-                      </div>
-                    </div>
-                    <pre className='overflow-x-auto px-3 py-2 text-xs leading-relaxed'>
-                      <code>
-                        {highlightMatchedText(
-                          match.lineText,
-                          match.matchRanges,
-                        )}
-                      </code>
-                    </pre>
-                  </div>
-                ))}
-                {group.matches.length > 10 ? (
-                  <p className='text-xs text-muted-foreground'>
-                    Showing 10 of {group.matches.length} matches for this
-                    project.
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <SearchCard />
     </>
   )
 }

@@ -1,4 +1,4 @@
-import { mkdir, readFile, stat } from 'node:fs/promises'
+import { access, constants, mkdir, readFile, stat } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type z from 'zod'
@@ -15,6 +15,15 @@ export async function pathExists(inputPath: string): Promise<boolean> {
 
 export async function ensureDir(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true })
+}
+
+export async function isReadableDir(dir: string): Promise<boolean> {
+  try {
+    await access(dir, constants.R_OK)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export function normalizeLocalPath(raw: string): string {
