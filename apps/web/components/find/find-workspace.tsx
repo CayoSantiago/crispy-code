@@ -160,7 +160,7 @@ export function FindWorkspace() {
     placeholderData: keepPreviousData,
   })
 
-  const searchResponse: SearchResponse | null = searchParams.query
+  const searchResponse: SearchResponse | null = searchQuery.trim()
     ? (searchResult.data ?? null)
     : null
   const isSearchPending = searchResult.isFetching
