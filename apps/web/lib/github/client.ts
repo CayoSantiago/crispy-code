@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import { env } from '@/lib/env'
 import { formatIssues } from '@/lib/validation'
 
 export type GitHubResult<T> =
@@ -30,7 +31,7 @@ export async function fetchGitHub<T>(
   path: string,
   schema: z.ZodType<T>,
 ): Promise<GitHubResult<T>> {
-  const token = process.env.GITHUB_TOKEN
+  const token = env.GITHUB_TOKEN
 
   try {
     const response = await fetch(`${API_BASE}${path}`, {

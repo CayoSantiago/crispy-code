@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { z } from 'zod'
 import { CodeBlock } from '@/components/code-block'
 import { languageForFilename } from '@/lib/diff/language-for-filename'
+import { env } from '@/lib/env'
 import { readFindConfig } from '@/lib/find/config'
 import { highlighter } from '@/lib/highlight'
 
@@ -30,13 +31,7 @@ async function assertKnownSource(filePath: string): Promise<void> {
   const config = await readFindConfig()
   const localRoots = config.localRoots.map((item) => item.path)
   const repoRoots = config.githubRepos.map((item) =>
-    path.join(
-      process.env.HOME ?? '',
-      '.crispy-code',
-      'repos',
-      item.owner,
-      item.repo,
-    ),
+    path.join(env.HOME, '.crispy-code', 'repos', item.owner, item.repo),
   )
 
   const knownRoots = [...localRoots, ...repoRoots]
