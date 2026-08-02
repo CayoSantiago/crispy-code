@@ -9,6 +9,7 @@ import {
 import { notFound } from 'next/navigation'
 import { FileDiff } from '@/components/git/file-diff'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
+import { TruncatedFilePath } from '@/components/git/truncated-file-path'
 import { getCommit } from '@/lib/github/commits'
 
 // GitHub caps the files array in a commit response at 300 entries.
@@ -38,8 +39,8 @@ export default async function CommitPage({
   const files = commit.files ?? []
 
   return (
-    <div className='grid gap-6 w-full grid-cols-1 max-w-full'>
-      <Card>
+    <div className='grid gap-6 w-full md:grid-cols-[400px_1fr] max-w-full'>
+      <Card className='md:col-span-2'>
         <CardHeader>
           <CardTitle>{subject}</CardTitle>
           <CardDescription>
@@ -73,16 +74,39 @@ export default async function CommitPage({
         </CardContent>
       </Card>
 
-      {files.map((file) => (
-        <FileDiff key={file.filename} file={file} />
-      ))}
+      <nav className=''>
+        <ul className='grid grid-cols-1 text-sm'>
+          {files.map((file) => (
+            <li key={file.filename}>
+              <a
+                href={`#${encodeURIComponent(file.filename)}`}
+                className='max-w-full truncate inline-flex items-center hover:bg-accent p-2 rounded-sm w-full'
+              >
+                <span className='text-emerald-600 dark:text-emerald-400 text-xs'>
+                  +{file.additions}
+                </span>
+                <span className='text-red-600 dark:text-red-400 text-xs px-2'>
+                  -{file.deletions}
+                </span>
+                <TruncatedFilePath filePath={file.filename} />
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
-      {files.length >= FILE_LIMIT ? (
-        <p className='text-muted-foreground text-sm text-center'>
-          GitHub returns at most {FILE_LIMIT} files per commit, so this list is
-          truncated.
-        </p>
-      ) : null}
+      <div className='grid grid-cols-1 gap-6'>
+        {files.map((file) => (
+          <FileDiff key={file.filename} file={file} />
+        ))}
+
+        {files.length >= FILE_LIMIT ? (
+          <p className='text-muted-foreground text-sm text-center'>
+            GitHub returns at most {FILE_LIMIT} files per commit, so this list
+            is truncated.
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }

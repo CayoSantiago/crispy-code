@@ -26,6 +26,7 @@ export default function RootLayout({
         fontMono.variable,
         'font-sans',
         inter.variable,
+        'scroll-smooth',
       )}
     >
       <body suppressHydrationWarning>

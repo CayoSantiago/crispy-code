@@ -139,7 +139,9 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-  
+}
+
+@layer components {
   .th-line {
     border-left: calc(0.5 * var(--spacing)) solid transparent;
     margin-left: calc(-2 * var(--spacing));
@@ -163,18 +165,6 @@
 
   .th-line--focused { opacity: 1; }
   .th-code:has(.th-line--focused) .th-line:not(.th-line--focused) { opacity: 0.55; }
-}
-
-@layer components {
-  .glowing-lg {
-    @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] before:animate-[rotation_4s_linear_infinite] before:-z-10 after:absolute after:inset-0 after:rounded-[inherit] after:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] after:animate-[rotation_4s_linear_infinite] after:-z-10 after:blur-2xl;
-  }
-  .glowing {
-    @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] before:animate-[rotation_4s_linear_infinite] before:-z-10 after:absolute after:inset-0 after:rounded-[inherit] after:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] after:animate-[rotation_4s_linear_infinite] after:-z-10 after:blur-lg;
-  }
-  .glowing-sm {
-    @apply relative before:absolute before:inset-0 before:rounded-[inherit] before:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] before:animate-[rotation_4s_linear_infinite] before:-z-10 after:absolute after:inset-0 after:rounded-[inherit] after:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] after:animate-[rotation_4s_linear_infinite] after:-z-10 after:blur-sm;
-  }
 }
 
 @keyframes rotation {

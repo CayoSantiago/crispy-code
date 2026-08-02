@@ -3,6 +3,7 @@ import { cn } from '@repo/ui/lib/utils'
 import type { HighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { CheckIcon, CopyIcon } from 'lucide-react'
 import { CopyButton } from '@/components/copy-button'
+import { TruncatedFilePath } from './git/truncated-file-path'
 
 export function CodeBlock({
   htmlMarkup,
@@ -13,10 +14,6 @@ export function CodeBlock({
   className,
   ...props
 }: React.ComponentProps<'figure'> & HighlightedCodeBlockProps) {
-  const segments = title?.split('/').filter(Boolean) ?? []
-  const [filename = ''] = segments.slice(-1)
-  const pathname = segments.slice(0, -1).join('/')
-
   return (
     <figure
       className={cn(
@@ -26,17 +23,15 @@ export function CodeBlock({
       {...props}
     >
       {title ? (
-        <div className='grid grid-cols-[auto_1fr] items-center max-w-full gap-2 p-2 pr-10 bg-muted h-10'>
+        <div className='grid grid-cols-[auto_1fr] items-center max-w-full gap-2 p-2 pr-3 bg-muted h-10'>
           <Badge
             variant='outline'
             className='rounded-xs font-mono text-muted-foreground'
           >
             {lang}
           </Badge>
-          <figcaption className='font-mono grid grid-cols-[auto_auto_auto] w-fit max-w-full'>
-            <span className='truncate text-muted-foreground'>{pathname}</span>
-            <span className='text-muted-foreground'>/</span>
-            <span>{filename}</span>
+          <figcaption className='font-mono flex min-w-0'>
+            <TruncatedFilePath filePath={title} />
           </figcaption>
         </div>
       ) : null}

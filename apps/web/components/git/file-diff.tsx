@@ -23,7 +23,10 @@ export function FileDiff({ file }: { file: GitHubCommitFile }) {
 
   if (!file.patch) {
     return (
-      <div className='grid gap-2 w-full'>
+      <div
+        id={encodeURIComponent(file.filename)}
+        className='grid gap-2 w-full scroll-m-4'
+      >
         {heading}
         <div className='border rounded-md bg-card p-4'>
           <p className='font-mono text-xs'>{file.filename}</p>
@@ -50,7 +53,10 @@ export function FileDiff({ file }: { file: GitHubCommitFile }) {
   })
 
   return (
-    <div className='grid gap-2 w-full grid-cols-1'>
+    <div
+      id={encodeURIComponent(file.filename)}
+      className='grid gap-2 w-full grid-cols-1 scroll-m-4'
+    >
       {heading}
       <CodeBlock {...props} />
     </div>
