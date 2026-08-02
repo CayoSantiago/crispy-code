@@ -37,7 +37,7 @@ Each action in `app/git/actions.ts` and `app/find/actions.ts` gets an input sche
 
 ### 3. GitHub client
 
-`fetchGitHub<T>(path)` in `lib/github/client.ts` becomes `fetchGitHub(path, schema)`: it fetches, then parses the JSON with the given schema, throwing a descriptive error (including the path and issue summary) on mismatch. Schemas live in `lib/github/` and cover `GitHubRepo`, `GitHubCommitSummary`, `GitHubCommitDetail`, and the user/org repo-list responses used by `app/find/actions.ts` — used fields only. The hand-written interfaces in `lib/github/types.ts` are replaced by inferred types.
+`fetchGitHub<T>(path)` in `lib/github/client.ts` becomes `fetchGitHub(path, schema)`: it fetches, then parses the JSON with the given schema. On mismatch it returns `{ status: 'error', message }` with the path and issue summary — preserving the client's documented never-throws contract; page consumers already throw on error status, and the lookup action renders it as UI. Schemas live in `lib/github/` and cover `GitHubRepo`, `GitHubCommitSummary`, `GitHubCommitDetail`, and the user/org repo-list responses used by `app/find/actions.ts` — used fields only. The hand-written interfaces in `lib/github/types.ts` are replaced by inferred types.
 
 ### 4. Disk config
 
@@ -62,7 +62,7 @@ New `lib/env.ts` with a schema for `GITHUB_TOKEN` (optional non-empty string) an
 ## Error handling
 
 - Bad user input → 400 with issues (API route) or returned field errors (actions).
-- Bad external data (GitHub) → thrown descriptive error, surfaced by existing error boundaries/mutation error states.
+- Bad external data (GitHub) → descriptive error-status result, surfaced by existing error boundaries/mutation error states.
 - Bad local state (disk config, rg lines) → recover with defaults or skip the line, plus a logged warning.
 - Valid data flows exactly as before.
 
