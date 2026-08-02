@@ -2,10 +2,16 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { notFound } from 'next/navigation'
+import { z } from 'zod'
 import { CodeBlock } from '@/components/code-block'
 import { languageForFilename } from '@/lib/diff/language-for-filename'
 import { readFindConfig } from '@/lib/find/config'
 import { highlighter } from '@/lib/highlight'
+
+const fileParamsSchema = z.object({
+  path: z.string().min(1),
+  line: z.coerce.number().int().positive().catch(0),
+})
 
 function normalizeFilePath(raw: string): string {
   return path.resolve(raw)
@@ -49,14 +55,13 @@ export default async function FindFilePage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const params = await searchParams
-  const inputPath = params.path
-  const line = Number(params.line ?? 0)
+  const parsed = fileParamsSchema.safeParse(await searchParams)
 
-  if (typeof inputPath !== 'string' || !inputPath.length) {
+  if (!parsed.success) {
     notFound()
   }
 
+  const { path: inputPath, line } = parsed.data
   const filePath = normalizeFilePath(inputPath)
   await assertKnownSource(filePath)
 
@@ -70,8 +75,8 @@ export default async function FindFilePage({
 
   const language = languageForFilename(filePath)
   const lines = code.split('\n')
-  const focusStart = Number.isFinite(line) && line > 3 ? line - 3 : 1
-  const focusEnd = Number.isFinite(line) ? Math.min(line + 3, lines.length) : 0
+  const focusStart = line > 3 ? line - 3 : 1
+  const focusEnd = line > 0 ? Math.min(line + 3, lines.length) : 0
   const focusSlice =
     line > 0
       ? lines
@@ -92,7 +97,7 @@ export default async function FindFilePage({
         <h1 className='text-lg font-semibold'>File view</h1>
         <p className='text-xs text-muted-foreground font-mono'>
           {filePath}
-          {Number.isFinite(line) && line > 0 ? `:${line}` : ''}
+          {line > 0 ? `:${line}` : ''}
         </p>
       </div>
       {focusSlice ? (

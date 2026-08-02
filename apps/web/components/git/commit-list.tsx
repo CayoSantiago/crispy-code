@@ -13,15 +13,15 @@ import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { z } from 'zod'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
 import { COMMITS_PER_PAGE, getCommits } from '@/lib/github/commits'
 import type { GitHubCommitSummary } from '@/lib/github/types'
 
-function toPageNumber(value: string | string[] | undefined): number {
-  const raw = Array.isArray(value) ? value[0] : value
-  const parsed = Number(raw)
+const pageSchema = z.coerce.number().int().positive().catch(1)
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : 1
+function toPageNumber(value: string | string[] | undefined): number {
+  return pageSchema.parse(Array.isArray(value) ? value[0] : value)
 }
 
 function subjectOf(message: string): string {

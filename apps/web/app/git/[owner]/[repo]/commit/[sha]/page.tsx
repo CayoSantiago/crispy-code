@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@repo/ui/components/card'
 import { notFound } from 'next/navigation'
+import { z } from 'zod'
 import { FileDiff } from '@/components/git/file-diff'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
 import { TruncatedFilePath } from '@/components/git/truncated-file-path'
@@ -15,10 +16,22 @@ import { getCommit } from '@/lib/github/commits'
 // GitHub caps the files array in a commit response at 300 entries.
 const FILE_LIMIT = 300
 
+const commitParamsSchema = z.object({
+  owner: z.string().min(1),
+  repo: z.string().min(1),
+  sha: z.string().regex(/^[0-9a-f]{4,40}$/i),
+})
+
 export default async function CommitPage({
   params,
 }: PageProps<'/git/[owner]/[repo]/commit/[sha]'>) {
-  const { owner, repo, sha } = await params
+  const parsedParams = commitParamsSchema.safeParse(await params)
+
+  if (!parsedParams.success) {
+    notFound()
+  }
+
+  const { owner, repo, sha } = parsedParams.data
   const result = await getCommit(owner, repo, sha)
 
   if (result.status === 'not-found') {
