@@ -1,80 +1,46 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { z } from 'zod'
+import { formatIssues } from '@/lib/validation'
 
-export type GitHubRepoSource = {
-  id: string
-  owner: string
-  repo: string
-  selectedAt: string
-  syncError: string | null
-  syncedAt: string | null
-}
+const MAX_RECENT_SEARCHES = 8
 
-export type LocalRootSource = {
-  id: string
-  path: string
-  addedAt: string
-}
+const gitHubRepoSourceSchema = z.object({
+  id: z.string(),
+  owner: z.string(),
+  repo: z.string(),
+  selectedAt: z.string(),
+  syncError: z.string().nullable(),
+  syncedAt: z.string().nullable(),
+})
 
-export type FindConfig = {
-  localRoots: LocalRootSource[]
-  githubRepos: GitHubRepoSource[]
-  recentSearches: string[]
-}
+const localRootSourceSchema = z.object({
+  id: z.string(),
+  path: z.string(),
+  addedAt: z.string(),
+})
+
+export const findConfigSchema = z.object({
+  localRoots: z.array(localRootSourceSchema),
+  githubRepos: z.array(gitHubRepoSourceSchema),
+  recentSearches: z
+    .array(z.string())
+    .transform((items) => items.slice(0, MAX_RECENT_SEARCHES)),
+})
+
+export type FindConfig = z.infer<typeof findConfigSchema>
+export type GitHubRepoSource = z.infer<typeof gitHubRepoSourceSchema>
+export type LocalRootSource = z.infer<typeof localRootSourceSchema>
 
 export const FIND_HOME = path.join(os.homedir(), '.crispy-code')
 export const FIND_CONFIG_PATH = path.join(FIND_HOME, 'config.json')
 export const FIND_MIRROR_ROOT = path.join(FIND_HOME, 'repos')
 
-const MAX_RECENT_SEARCHES = 8
 let updateQueue: Promise<unknown> = Promise.resolve()
 
-function normalizeConfig(input: unknown): FindConfig {
-  const empty: FindConfig = {
-    localRoots: [],
-    githubRepos: [],
-    recentSearches: [],
-  }
-
-  if (!input || typeof input !== 'object') {
-    return empty
-  }
-
-  const value = input as Partial<FindConfig>
-
-  const localRoots =
-    value.localRoots?.filter((item): item is LocalRootSource => {
-      return Boolean(
-        item &&
-          typeof item.id === 'string' &&
-          typeof item.path === 'string' &&
-          typeof item.addedAt === 'string',
-      )
-    }) ?? []
-
-  const githubRepos =
-    value.githubRepos?.filter((item): item is GitHubRepoSource => {
-      return Boolean(
-        item &&
-          typeof item.id === 'string' &&
-          typeof item.owner === 'string' &&
-          typeof item.repo === 'string' &&
-          typeof item.selectedAt === 'string' &&
-          (typeof item.syncedAt === 'string' || item.syncedAt === null) &&
-          (typeof item.syncError === 'string' || item.syncError === null),
-      )
-    }) ?? []
-
-  const recentSearches = (value.recentSearches ?? [])
-    .filter((item): item is string => typeof item === 'string')
-    .slice(0, MAX_RECENT_SEARCHES)
-
-  return {
-    localRoots,
-    githubRepos,
-    recentSearches,
-  }
+function emptyFindConfig(): FindConfig {
+  return { localRoots: [], githubRepos: [], recentSearches: [] }
 }
 
 async function ensureFindHome(): Promise<void> {
@@ -82,20 +48,39 @@ async function ensureFindHome(): Promise<void> {
 }
 
 export async function readFindConfig(): Promise<FindConfig> {
+  let raw: string
+
   try {
-    const raw = await readFile(FIND_CONFIG_PATH, 'utf8')
-    return normalizeConfig(JSON.parse(raw))
+    raw = await readFile(FIND_CONFIG_PATH, 'utf8')
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return {
-        localRoots: [],
-        githubRepos: [],
-        recentSearches: [],
-      }
+      return emptyFindConfig()
     }
 
     throw error
   }
+
+  let parsed: unknown
+
+  try {
+    parsed = JSON.parse(raw)
+  } catch {
+    console.warn(
+      `Ignoring unparseable find config at ${FIND_CONFIG_PATH}; using defaults.`,
+    )
+    return emptyFindConfig()
+  }
+
+  const result = findConfigSchema.safeParse(parsed)
+
+  if (!result.success) {
+    console.warn(
+      `Ignoring invalid find config at ${FIND_CONFIG_PATH}: ${formatIssues(result.error)}`,
+    )
+    return emptyFindConfig()
+  }
+
+  return result.data
 }
 
 export async function writeFindConfig(config: FindConfig): Promise<void> {
@@ -112,7 +97,7 @@ export async function updateFindConfig(
 ): Promise<FindConfig> {
   const task = updateQueue.then(async () => {
     const current = await readFindConfig()
-    const next = normalizeConfig(update(current))
+    const next = findConfigSchema.parse(update(current))
     await writeFindConfig(next)
     return next
   })
