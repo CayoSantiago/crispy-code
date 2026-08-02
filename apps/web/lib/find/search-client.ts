@@ -1,5 +1,8 @@
 import type { SearchOptions } from '@/lib/find/search'
-import type { SearchResponse } from '@/lib/find/search-service'
+import {
+  type SearchResponse,
+  searchResponseSchema,
+} from '@/lib/find/search-schema'
 
 export type { SearchResponse }
 
@@ -30,5 +33,11 @@ export async function fetchSearchResults(
     )
   }
 
-  return response.json() as Promise<SearchResponse>
+  const parsed = searchResponseSchema.safeParse(await response.json())
+
+  if (!parsed.success) {
+    throw new Error('Search response did not match the expected shape.')
+  }
+
+  return parsed.data
 }

@@ -9,14 +9,9 @@ import {
   type SearchOptions,
   searchAcrossSources,
 } from '@/lib/find/search'
+import type { SearchResponse } from '@/lib/find/search-schema'
 
-export type SearchResponse = {
-  groups: ReturnType<typeof groupMatchesByProject>
-  totalMatches: number
-  missingSources: Array<{ id: string; label: string }>
-  sourceOptions: Array<{ id: string; label: string }>
-  recentSearches: string[]
-}
+export type { SearchResponse }
 
 export async function executeSearch(
   options: SearchOptions,

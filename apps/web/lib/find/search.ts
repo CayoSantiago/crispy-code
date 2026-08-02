@@ -7,8 +7,9 @@ import {
   type GitHubRepoSource,
   type LocalRootSource,
 } from './config'
+import type { SearchMatch, SearchMode } from './search-schema'
 
-export type SearchMode = 'literal' | 'regex'
+export type { SearchMatch, SearchMode }
 
 export type SearchOptions = {
   query: string
@@ -26,18 +27,6 @@ export type SearchSource = {
   label: string
   rootPath: string
   kind: 'local' | 'github'
-}
-
-export type SearchMatch = {
-  sourceId: string
-  sourceLabel: string
-  sourceKind: 'local' | 'github'
-  absolutePath: string
-  relativePath: string
-  lineNumber: number
-  lineText: string
-  matchRanges: Array<{ start: number; end: number }>
-  projectName: string
 }
 
 type RgMatchEvent = {
