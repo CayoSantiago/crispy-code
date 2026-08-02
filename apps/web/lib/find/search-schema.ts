@@ -5,8 +5,12 @@ export const searchModeSchema = z.enum(['literal', 'regex'])
 export const searchRequestSchema = z.object({
   query: z.string().trim().min(1, 'Missing query parameter.'),
   mode: searchModeSchema.default('literal'),
-  caseSensitive: z.stringbool().default(false),
-  wholeWord: z.stringbool().default(false),
+  caseSensitive: z
+    .stringbool({ truthy: ['true'], falsy: ['false'] })
+    .default(false),
+  wholeWord: z
+    .stringbool({ truthy: ['true'], falsy: ['false'] })
+    .default(false),
   extension: z.string().default(''),
   pathFilter: z.string().default(''),
   sourceFilter: z.string().default(''),
