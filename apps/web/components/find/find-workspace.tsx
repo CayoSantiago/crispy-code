@@ -24,6 +24,7 @@ import {
 } from '@repo/ui/components/select'
 import {
   keepPreviousData,
+  useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
@@ -34,19 +35,12 @@ import {
   Trash2Icon,
 } from 'lucide-react'
 import Link from 'next/link'
-import {
-  useActionState,
-  useEffect,
-  useMemo,
-  useState,
-  useTransition,
-} from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import {
   addLocalRoot,
   getFindConfig,
   lookupGitHubRepos,
   removeLocalRoot,
-  type SourceActionState,
   setGitHubRepoSelection,
   syncSelectedGitHubRepos,
 } from '@/app/find/actions'
@@ -59,7 +53,6 @@ import {
   type SearchResponse,
 } from '@/lib/find/search-client'
 
-const initialSourceState: SourceActionState = {}
 const ALL_SOURCES_VALUE = '__all_sources__'
 const emptyConfig: FindConfig = {
   localRoots: [],
@@ -107,14 +100,82 @@ function highlightMatchedText(
 }
 
 export function FindWorkspace() {
-  const [sourceState, sourceAction, sourcePending] = useActionState(
-    addLocalRoot,
-    initialSourceState,
-  )
   const queryClient = useQueryClient()
   const configQuery = useQuery({
     queryKey: findKeys.config(),
     queryFn: () => getFindConfig(),
+  })
+  const addLocalRootMutation = useMutation({
+    mutationFn: (formData: FormData) => addLocalRoot(formData),
+    onSuccess: async (result) => {
+      if (!result.error) {
+        await queryClient.invalidateQueries({ queryKey: findKeys.config() })
+      }
+    },
+  })
+
+  const removeLocalRootMutation = useMutation({
+    mutationFn: (id: string) => removeLocalRoot(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
+      await queryClient.invalidateQueries({ queryKey: findKeys.searches() })
+    },
+  })
+
+  const repoLookupMutation = useMutation({
+    mutationFn: (owner: string) => lookupGitHubRepos(owner),
+    onSuccess: (result) => {
+      if (result.status !== 'ok') {
+        if (result.status === 'rate-limited') {
+          setRepoLookupError(
+            result.resetAt
+              ? `Rate limited until ${new Date(result.resetAt).toLocaleTimeString()}.`
+              : 'Rate limited by GitHub. Try again soon.',
+          )
+        } else {
+          setRepoLookupError(result.message ?? 'Could not load repositories.')
+        }
+        setRepoResults([])
+        return
+      }
+
+      setRepoLookupError(null)
+      setRepoResults(result.repos)
+    },
+  })
+
+  const repoSelectionMutation = useMutation({
+    mutationFn: ({
+      repo,
+      selected,
+    }: {
+      repo: { id: string; owner: string; repo: string }
+      selected: boolean
+    }) => setGitHubRepoSelection(repo, selected),
+    onSuccess: async (_data, { repo, selected }) => {
+      setRepoResults((current) =>
+        current.map((item) =>
+          item.id === repo.id ? { ...item, selected } : item,
+        ),
+      )
+      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
+    },
+  })
+
+  const syncMutation = useMutation({
+    mutationFn: () => syncSelectedGitHubRepos(),
+    onSuccess: async (results) => {
+      setSyncMessages(
+        Object.fromEntries(
+          results.map((result) => [
+            result.id,
+            result.ok ? 'Synced' : `Failed: ${result.message}`,
+          ]),
+        ),
+      )
+      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
+      await queryClient.invalidateQueries({ queryKey: findKeys.searches() })
+    },
   })
   const config = configQuery.data ?? emptyConfig
   const [repoOwner, setRepoOwner] = useState('')
@@ -131,11 +192,6 @@ export function FindWorkspace() {
   const [sourceFilter, setSourceFilter] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
   const [syncMessages, setSyncMessages] = useState<Record<string, string>>({})
-
-  const [isRepoLookupPending, startRepoLookup] = useTransition()
-  const [isRepoSelectionPending, startRepoSelection] = useTransition()
-  const [isSyncPending, startSync] = useTransition()
-  const [isRemovingLocalRoot, startLocalRootRemove] = useTransition()
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 220)
@@ -195,7 +251,20 @@ export function FindWorkspace() {
             <CardTitle>Sources</CardTitle>
           </CardHeader>
           <CardContent className='grid gap-6'>
-            <form action={sourceAction} className='grid gap-3'>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault()
+                const form = event.currentTarget
+                addLocalRootMutation.mutate(new FormData(form), {
+                  onSuccess: (result) => {
+                    if (!result.error) {
+                      form.reset()
+                    }
+                  },
+                })
+              }}
+              className='grid gap-3'
+            >
               <Field>
                 <FieldLabel htmlFor='localPath'>Add local folder</FieldLabel>
                 <Input
@@ -205,12 +274,14 @@ export function FindWorkspace() {
                   required
                   autoComplete='off'
                 />
-                {sourceState.error ? (
-                  <FieldError>{sourceState.error}</FieldError>
+                {addLocalRootMutation.data?.error ? (
+                  <FieldError>{addLocalRootMutation.data.error}</FieldError>
                 ) : null}
               </Field>
-              <Button type='submit' disabled={sourcePending}>
-                {sourcePending ? 'Adding...' : 'Add local source'}
+              <Button type='submit' disabled={addLocalRootMutation.isPending}>
+                {addLocalRootMutation.isPending
+                  ? 'Adding...'
+                  : 'Add local source'}
               </Button>
             </form>
 
@@ -225,15 +296,8 @@ export function FindWorkspace() {
                     <Button
                       variant='ghost'
                       size='icon-sm'
-                      disabled={isRemovingLocalRoot}
-                      onClick={() =>
-                        startLocalRootRemove(async () => {
-                          await removeLocalRoot(root.id)
-                          await queryClient.invalidateQueries({
-                            queryKey: findKeys.config(),
-                          })
-                        })
-                      }
+                      disabled={removeLocalRootMutation.isPending}
+                      onClick={() => removeLocalRootMutation.mutate(root.id)}
                     >
                       <Trash2Icon />
                       <span className='sr-only'>Remove local source</span>
@@ -259,33 +323,15 @@ export function FindWorkspace() {
               </Field>
               <Button
                 type='button'
-                disabled={isRepoLookupPending}
-                onClick={() =>
-                  startRepoLookup(async () => {
-                    setRepoLookupError(null)
-                    const result = await lookupGitHubRepos(repoOwner)
-
-                    if (result.status !== 'ok') {
-                      if (result.status === 'rate-limited') {
-                        setRepoLookupError(
-                          result.resetAt
-                            ? `Rate limited until ${new Date(result.resetAt).toLocaleTimeString()}.`
-                            : 'Rate limited by GitHub. Try again soon.',
-                        )
-                      } else {
-                        setRepoLookupError(
-                          result.message ?? 'Could not load repositories.',
-                        )
-                      }
-                      setRepoResults([])
-                      return
-                    }
-
-                    setRepoResults(result.repos)
-                  })
-                }
+                disabled={repoLookupMutation.isPending}
+                onClick={() => {
+                  setRepoLookupError(null)
+                  repoLookupMutation.mutate(repoOwner)
+                }}
               >
-                {isRepoLookupPending ? 'Loading repos...' : 'Load repositories'}
+                {repoLookupMutation.isPending
+                  ? 'Loading repos...'
+                  : 'Load repositories'}
               </Button>
               {repoLookupError ? (
                 <FieldError>{repoLookupError}</FieldError>
@@ -304,29 +350,15 @@ export function FindWorkspace() {
                       <input
                         type='checkbox'
                         checked={repo.selected}
-                        disabled={isRepoSelectionPending}
+                        disabled={repoSelectionMutation.isPending}
                         onChange={(event) =>
-                          startRepoSelection(async () => {
-                            await setGitHubRepoSelection(
-                              {
-                                id: repo.id,
-                                owner: repo.owner,
-                                repo: repo.repo,
-                              },
-                              event.target.checked,
-                            )
-
-                            setRepoResults((current) =>
-                              current.map((item) =>
-                                item.id === repo.id
-                                  ? { ...item, selected: event.target.checked }
-                                  : item,
-                              ),
-                            )
-
-                            await queryClient.invalidateQueries({
-                              queryKey: findKeys.config(),
-                            })
+                          repoSelectionMutation.mutate({
+                            repo: {
+                              id: repo.id,
+                              owner: repo.owner,
+                              repo: repo.repo,
+                            },
+                            selected: event.target.checked,
                           })
                         }
                       />
@@ -345,24 +377,12 @@ export function FindWorkspace() {
           <CardContent className='grid gap-3'>
             <Button
               type='button'
-              disabled={!config.githubRepos.length || isSyncPending}
-              onClick={() =>
-                startSync(async () => {
-                  const results = await syncSelectedGitHubRepos()
-                  const nextMessages = Object.fromEntries(
-                    results.map((result) => [
-                      result.id,
-                      result.ok ? 'Synced' : `Failed: ${result.message}`,
-                    ]),
-                  )
-                  setSyncMessages(nextMessages)
-                  await queryClient.invalidateQueries({
-                    queryKey: findKeys.config(),
-                  })
-                })
-              }
+              disabled={!config.githubRepos.length || syncMutation.isPending}
+              onClick={() => syncMutation.mutate()}
             >
-              {isSyncPending ? 'Syncing...' : 'Sync selected repositories'}
+              {syncMutation.isPending
+                ? 'Syncing...'
+                : 'Sync selected repositories'}
             </Button>
 
             {selectedRepos.length ? (

@@ -103,7 +103,6 @@ async function runGit(
 // }
 
 export async function addLocalRoot(
-  _state: SourceActionState,
   formData: FormData,
 ): Promise<SourceActionState> {
   const rawPath = String(formData.get('localPath') ?? '').trim()
