@@ -1,6 +1,5 @@
 'use server'
 
-import { spawn } from 'node:child_process'
 import { access, constants, mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import {
@@ -12,6 +11,7 @@ import {
   readFindConfig,
   updateFindConfig,
 } from '@/lib/find/config'
+import { runGit } from '@/lib/git'
 import { fetchGitHub } from '@/lib/github/client'
 
 type GitHubRepoLookupItem = {
@@ -57,36 +57,6 @@ function nowIso(): string {
 
 async function ensureReadableDirectory(inputPath: string): Promise<void> {
   await access(inputPath, constants.R_OK)
-}
-
-async function runGit(
-  args: string[],
-  cwd?: string,
-): Promise<{ ok: boolean; error?: string }> {
-  return new Promise((resolve) => {
-    const child = spawn('git', args, { cwd })
-    let stderr = ''
-
-    child.stderr.on('data', (chunk: Buffer) => {
-      stderr += chunk.toString('utf8')
-    })
-
-    child.on('error', (error) => {
-      resolve({ ok: false, error: error.message })
-    })
-
-    child.on('close', (code) => {
-      if (code === 0) {
-        resolve({ ok: true })
-        return
-      }
-
-      resolve({
-        ok: false,
-        error: stderr.trim() || `git exited with code ${code}`,
-      })
-    })
-  })
 }
 
 export async function addLocalRoot(
