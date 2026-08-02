@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
-import type { SearchOptions } from '@/lib/find/search'
+import { searchRequestSchema } from '@/lib/find/search-schema'
 import { executeSearch } from '@/lib/find/search-service'
+import { formatIssues } from '@/lib/validation'
 
 export async function GET(request: NextRequest) {
   if (request.headers.get('sec-fetch-site') === 'cross-site') {
@@ -10,26 +11,24 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const params = request.nextUrl.searchParams
-  const query = params.get('query')?.trim() ?? ''
+  const parsed = searchRequestSchema.safeParse(
+    Object.fromEntries(request.nextUrl.searchParams),
+  )
 
-  if (!query) {
-    return Response.json({ error: 'Missing query parameter.' }, { status: 400 })
-  }
-
-  const options: SearchOptions = {
-    query,
-    mode: params.get('mode') === 'regex' ? 'regex' : 'literal',
-    caseSensitive: params.get('caseSensitive') === 'true',
-    wholeWord: params.get('wholeWord') === 'true',
-    extension: params.get('extension') ?? '',
-    pathFilter: params.get('pathFilter') ?? '',
-    sourceFilter: params.get('sourceFilter') ?? '',
-    maxResultsPerSource: 50,
+  if (!parsed.success) {
+    return Response.json(
+      { error: formatIssues(parsed.error), issues: parsed.error.issues },
+      { status: 400 },
+    )
   }
 
   try {
-    return Response.json(await executeSearch(options, request.signal))
+    return Response.json(
+      await executeSearch(
+        { ...parsed.data, maxResultsPerSource: 50 },
+        request.signal,
+      ),
+    )
   } catch (error) {
     return Response.json(
       {
