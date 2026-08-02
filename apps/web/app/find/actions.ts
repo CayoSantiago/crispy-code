@@ -2,6 +2,7 @@
 
 import { access, constants, mkdir } from 'node:fs/promises'
 import path from 'node:path'
+import { z } from 'zod'
 import {
   createSourceId,
   FIND_MIRROR_ROOT,
@@ -45,6 +46,23 @@ export type SyncResult = {
   message: string
 }
 
+const addLocalRootFields = z.object({
+  localPath: z.string().trim().min(1),
+})
+
+const sourceIdSchema = z.string().min(1)
+
+const repoSelectionSchema = z.object({
+  repo: z.object({
+    id: z.string().min(1),
+    owner: z.string().min(1),
+    repo: z.string().min(1),
+  }),
+  selected: z.boolean(),
+})
+
+const ownerOrOrgSchema = z.string().trim().min(1)
+
 function nowIso(): string {
   return new Date().toISOString()
 }
@@ -56,13 +74,15 @@ async function ensureReadableDirectory(inputPath: string): Promise<void> {
 export async function addLocalRoot(
   formData: FormData,
 ): Promise<SourceActionState> {
-  const rawPath = String(formData.get('localPath') ?? '').trim()
+  const fields = addLocalRootFields.safeParse({
+    localPath: formData.get('localPath'),
+  })
 
-  if (!rawPath) {
+  if (!fields.success) {
     return { error: 'Enter a local project folder.' }
   }
 
-  const normalized = normalizeLocalPath(rawPath)
+  const normalized = normalizeLocalPath(fields.data.localPath)
   const absolute = path.resolve(normalized)
 
   try {
@@ -91,20 +111,24 @@ export async function addLocalRoot(
 }
 
 export async function removeLocalRoot(id: string): Promise<void> {
+  const parsedId = sourceIdSchema.parse(id)
+
   await updateFindConfig((current) => ({
     ...current,
-    localRoots: current.localRoots.filter((item) => item.id !== id),
+    localRoots: current.localRoots.filter((item) => item.id !== parsedId),
   }))
 }
 
 export async function lookupGitHubRepos(
   ownerOrOrg: string,
 ): Promise<GitHubLookupResult> {
-  const target = ownerOrOrg.trim()
+  const parsedTarget = ownerOrOrgSchema.safeParse(ownerOrOrg)
 
-  if (!target) {
+  if (!parsedTarget.success) {
     return { status: 'error', message: 'Enter a GitHub username or org.' }
   }
+
+  const target = parsedTarget.data
 
   const userResult = await fetchGitHub(
     `/users/${encodeURIComponent(target)}/repos?per_page=100&sort=updated`,
@@ -170,9 +194,14 @@ export async function lookupGitHubRepos(
 }
 
 export async function setGitHubRepoSelection(
-  repo: Pick<GitHubRepoSource, 'owner' | 'repo' | 'id'>,
-  selected: boolean,
+  repoInput: Pick<GitHubRepoSource, 'owner' | 'repo' | 'id'>,
+  selectedInput: boolean,
 ): Promise<void> {
+  const { repo, selected } = repoSelectionSchema.parse({
+    repo: repoInput,
+    selected: selectedInput,
+  })
+
   await updateFindConfig((current) => {
     const existing = current.githubRepos.find((item) => item.id === repo.id)
 
