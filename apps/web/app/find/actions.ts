@@ -90,18 +90,6 @@ async function runGit(
   })
 }
 
-// function syncStatusMessage(repo: GitHubRepoSource): string {
-//   if (repo.syncError) {
-//     return `Failed: ${repo.syncError}`
-//   }
-
-//   if (repo.syncedAt) {
-//     return `Synced ${new Date(repo.syncedAt).toLocaleString()}`
-//   }
-
-//   return 'Not yet synced'
-// }
-
 export async function addLocalRoot(
   formData: FormData,
 ): Promise<SourceActionState> {
@@ -361,9 +349,3 @@ export async function syncSelectedGitHubRepos(): Promise<SyncResult[]> {
 export async function getFindConfig(): Promise<FindConfig> {
   return readFindConfig()
 }
-
-// export function formatRepoSyncStatus(config: FindConfig): Record<string, string> {
-//   return Object.fromEntries(
-//     config.githubRepos.map((repo) => [repo.id, syncStatusMessage(repo)]),
-//   )
-// }
