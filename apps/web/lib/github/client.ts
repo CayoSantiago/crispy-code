@@ -1,3 +1,6 @@
+import type { z } from 'zod'
+import { formatIssues } from '@/lib/validation'
+
 export type GitHubResult<T> =
   | { status: 'error'; message: string }
   | { status: 'not-found' }
@@ -23,7 +26,10 @@ function resetAtFrom(headers: Headers): Date | null {
  * `status` so that expected conditions such as rate limiting can render as UI
  * instead of hitting an error boundary.
  */
-export async function fetchGitHub<T>(path: string): Promise<GitHubResult<T>> {
+export async function fetchGitHub<T>(
+  path: string,
+  schema: z.ZodType<T>,
+): Promise<GitHubResult<T>> {
   const token = process.env.GITHUB_TOKEN
 
   try {
@@ -36,7 +42,16 @@ export async function fetchGitHub<T>(path: string): Promise<GitHubResult<T>> {
     })
 
     if (response.ok) {
-      return { status: 'ok', data: (await response.json()) as T }
+      const parsed = schema.safeParse(await response.json())
+
+      if (!parsed.success) {
+        return {
+          status: 'error',
+          message: `GitHub response for ${path} failed validation: ${formatIssues(parsed.error)}`,
+        }
+      }
+
+      return { status: 'ok', data: parsed.data }
     }
 
     // GitHub answers an unknown commit SHA with 422 "No commit found for SHA"

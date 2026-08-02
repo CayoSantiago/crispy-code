@@ -1,5 +1,10 @@
 import { cacheLife, cacheTag } from 'next/cache'
 import { fetchGitHub, type GitHubResult } from './client'
+import {
+  gitHubCommitDetailSchema,
+  gitHubCommitListSchema,
+  gitHubRepoSchema,
+} from './schemas'
 import type {
   GitHubCommitDetail,
   GitHubCommitSummary,
@@ -19,7 +24,7 @@ export async function getRepo(
   'use cache'
   cacheTag(`repo:${owner}/${repo}`)
 
-  const result = await fetchGitHub<GitHubRepo>(repoPath(owner, repo))
+  const result = await fetchGitHub(repoPath(owner, repo), gitHubRepoSchema)
 
   if (result.status === 'ok') {
     cacheLife('minutes')
@@ -39,8 +44,9 @@ export async function getCommits(
   'use cache'
   cacheTag(`repo:${owner}/${repo}`)
 
-  const result = await fetchGitHub<GitHubCommitSummary[]>(
+  const result = await fetchGitHub(
     `${repoPath(owner, repo)}/commits?per_page=${COMMITS_PER_PAGE}&page=${page}`,
+    gitHubCommitListSchema,
   )
 
   if (result.status === 'ok') {
@@ -60,8 +66,9 @@ export async function getCommit(
   'use cache'
   cacheTag(`repo:${owner}/${repo}`)
 
-  const result = await fetchGitHub<GitHubCommitDetail>(
+  const result = await fetchGitHub(
     `${repoPath(owner, repo)}/commits/${encodeURIComponent(sha)}`,
+    gitHubCommitDetailSchema,
   )
 
   if (result.status === 'ok') {

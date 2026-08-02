@@ -13,14 +13,8 @@ import {
 } from '@/lib/find/config'
 import { runGit } from '@/lib/git'
 import { fetchGitHub } from '@/lib/github/client'
-
-type GitHubRepoLookupItem = {
-  full_name: string
-  name: string
-  owner: {
-    login: string
-  }
-}
+import { gitHubRepoLookupListSchema } from '@/lib/github/schemas'
+import type { GitHubRepoLookupItem } from '@/lib/github/types'
 
 export type SourceActionState = {
   error?: string
@@ -112,8 +106,9 @@ export async function lookupGitHubRepos(
     return { status: 'error', message: 'Enter a GitHub username or org.' }
   }
 
-  const userResult = await fetchGitHub<GitHubRepoLookupItem[]>(
+  const userResult = await fetchGitHub(
     `/users/${encodeURIComponent(target)}/repos?per_page=100&sort=updated`,
+    gitHubRepoLookupListSchema,
   )
 
   const mapRepos = async (
@@ -145,8 +140,9 @@ export async function lookupGitHubRepos(
     }
   }
 
-  const orgResult = await fetchGitHub<GitHubRepoLookupItem[]>(
+  const orgResult = await fetchGitHub(
     `/orgs/${encodeURIComponent(target)}/repos?per_page=100&sort=updated`,
+    gitHubRepoLookupListSchema,
   )
 
   if (orgResult.status === 'ok') {
