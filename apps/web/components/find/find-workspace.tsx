@@ -35,14 +35,13 @@ import {
   Trash2Icon,
 } from 'lucide-react'
 import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   addLocalRoot,
   getFindConfig,
   lookupGitHubRepos,
   removeLocalRoot,
   setGitHubRepoSelection,
-  syncSelectedGitHubRepos,
 } from '@/app/find/actions'
 import { CopyButton } from '@/components/copy-button'
 import type { FindConfig } from '@/lib/find/config'
@@ -52,6 +51,7 @@ import {
   fetchSearchResults,
   type SearchResponse,
 } from '@/lib/find/search-client'
+import { GitHubMirrorSyncCard } from './github-mirror-sync-card'
 
 const ALL_SOURCES_VALUE = '__all_sources__'
 const emptyConfig: FindConfig = {
@@ -162,21 +162,6 @@ export function FindWorkspace() {
     },
   })
 
-  const syncMutation = useMutation({
-    mutationFn: () => syncSelectedGitHubRepos(),
-    onSuccess: async (results) => {
-      setSyncMessages(
-        Object.fromEntries(
-          results.map((result) => [
-            result.id,
-            result.ok ? 'Synced' : `Failed: ${result.message}`,
-          ]),
-        ),
-      )
-      await queryClient.invalidateQueries({ queryKey: findKeys.config() })
-      await queryClient.invalidateQueries({ queryKey: findKeys.searches() })
-    },
-  })
   const config = configQuery.data ?? emptyConfig
   const [repoOwner, setRepoOwner] = useState('')
   const [repoLookupError, setRepoLookupError] = useState<string | null>(null)
@@ -191,7 +176,6 @@ export function FindWorkspace() {
   const [pathFilter, setPathFilter] = useState('')
   const [sourceFilter, setSourceFilter] = useState('')
   const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [syncMessages, setSyncMessages] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const timeout = setTimeout(() => setDebouncedQuery(searchQuery), 220)
@@ -232,13 +216,6 @@ export function FindWorkspace() {
       current ? { ...current, recentSearches: latestRecentSearches } : current,
     )
   }, [latestRecentSearches, queryClient])
-
-  const selectedRepos = useMemo(() => {
-    return config.githubRepos.map((repo) => ({
-      ...repo,
-      message: syncMessages[repo.id] ?? 'Idle',
-    }))
-  }, [config.githubRepos, syncMessages])
 
   const hasNoSources =
     configQuery.isSuccess &&
@@ -377,47 +354,7 @@ export function FindWorkspace() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>GitHub mirror sync</CardTitle>
-          </CardHeader>
-          <CardContent className='grid gap-3'>
-            <Button
-              type='button'
-              disabled={!config.githubRepos.length || syncMutation.isPending}
-              onClick={() => syncMutation.mutate()}
-            >
-              {syncMutation.isPending
-                ? 'Syncing...'
-                : 'Sync selected repositories'}
-            </Button>
-
-            {selectedRepos.length ? (
-              <div className='grid gap-2'>
-                {selectedRepos.map((repo) => (
-                  <div key={repo.id} className='rounded-md border p-3'>
-                    <p className='font-mono text-xs'>
-                      {repo.owner}/{repo.repo}
-                    </p>
-                    <p className='text-xs text-muted-foreground mt-1'>
-                      {repo.message}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty>
-                <EmptyHeader>
-                  <EmptyTitle>No GitHub repos selected yet</EmptyTitle>
-                  <EmptyDescription>
-                    Search GitHub repos on the left and check the ones you want
-                    to include.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            )}
-          </CardContent>
-        </Card>
+        <GitHubMirrorSyncCard />
       </div>
 
       <Card>
