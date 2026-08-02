@@ -35,3 +35,18 @@ GITHUB_TOKEN=ghp_your_token_here
 ```
 
 The token is optional; the feature works without it.
+
+## Code Finder
+
+Visit `/find` to search code snippets across:
+
+- local project folders you add manually, and
+- selected GitHub repositories synced as shallow local mirrors.
+
+Search runs with `ripgrep` and respects each project's `.gitignore` entries.
+
+### Notes
+
+- GitHub sync writes mirrors to `~/.crispy-code/repos`.
+- App config is stored in `~/.crispy-code/config.json`.
+- `GITHUB_TOKEN` is optional but helps avoid low unauthenticated rate limits.
