@@ -1,5 +1,6 @@
 <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16"
   style="color: currentcolor;">
+  <title>Next.js</title>
   <g clip-path="url(#clip0_53_108)">
     <circle cx="8" cy="8" r="7.375" fill="black" stroke="var(--ds-gray-1000)" strokewidth="1.25" stroke-linecap="round"
       stroke-linejoin="round"></circle>

@@ -9,7 +9,6 @@ export function useCopyToClipboard({
   timeout?: number
   onCopy?: () => void
 } = {}) {
-
   const [isCopied, setIsCopied] = useState(false)
 
   const copyToClipboard = (value: string) => {

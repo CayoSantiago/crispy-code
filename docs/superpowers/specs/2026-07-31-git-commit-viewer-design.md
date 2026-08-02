@@ -25,7 +25,7 @@ These were settled during brainstorming and are fixed for this spec.
   optional `GITHUB_TOKEN` environment variable that raises the ceiling from 60 to
   5,000 requests per hour when present.
 - **Verification:** no test runner is added. Correctness is verified manually in
-  the browser alongside `pnpm typecheck` and `pnpm lint`.
+  the browser alongside `pnpm check-types` and `pnpm lint`.
 
 ### Out of Scope
 
@@ -362,4 +362,4 @@ Modified:
 4. A nonexistent repository or SHA shows the not-found UI, not a stack trace.
 5. Exhausting the rate limit shows the reset-time state rather than an error
    boundary.
-6. `pnpm typecheck` and `pnpm lint` both pass.
+6. `pnpm check-types` and `pnpm lint` both pass.

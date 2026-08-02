@@ -1,5 +1,6 @@
 <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16"
   style="color: currentcolor;">
+  <title>Reddit</title>
   <path
     d="M7.99102 15.8942C12.3558 15.8942 15.8941 12.3558 15.8941 7.99104C15.8941 3.62626 12.3558 0.0879135 7.99102 0.0879135C3.62624 0.0879135 0.0878906 3.62626 0.0878906 7.99104C0.0878906 12.3558 3.62624 15.8942 7.99102 15.8942Z"
     fill="#FF4500"></path>

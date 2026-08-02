@@ -68,7 +68,7 @@ New `lib/env.ts` with a schema for `GITHUB_TOKEN` (optional non-empty string) an
 
 ## Testing and verification
 
-No test framework exists in the repo; verification is `pnpm typecheck`, Biome lint, and manual checks against the dev server:
+No test framework exists in the repo; verification is `pnpm check-types`, Biome lint, and manual checks against the dev server:
 
 1. Git flow: connect a repo, browse commits with valid and invalid `page`/`sha` values.
 2. Find flow: add/remove sources, search (literal and regex), open files with valid and tampered `path`/`line` params.

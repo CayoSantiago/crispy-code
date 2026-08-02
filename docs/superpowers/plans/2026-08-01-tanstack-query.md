@@ -14,7 +14,7 @@
 - This Next.js version differs from training data. Bundled docs live at `node_modules/.pnpm/next@16.2.6_react-dom@19.2.4_react@19.2.4__react@19.2.4/node_modules/next/dist/docs/` — consult them if route handler or hydration behavior surprises you.
 - Package manager is pnpm (`pnpm@10.33.4`); install into the web app with `pnpm --filter web add <pkg>` from the repo root.
 - QueryClient defaults: `staleTime: 30_000`, `retry: 1` (exact values from the spec).
-- No test framework exists and the spec mandates manual verification only. Every task's verify steps are: `pnpm typecheck`, `pnpm lint` (Biome; `pnpm lint:fix` to autofix formatting/import order), and dev-server checks with `pnpm --filter web dev` (serves on http://localhost:3000).
+- No test framework exists and the spec mandates manual verification only. Every task's verify steps are: `pnpm check-types`, `pnpm lint` (Biome; `pnpm lint:fix` to autofix formatting/import order), and dev-server checks with `pnpm --filter web dev` (serves on http://localhost:3000).
 - TanStack Query owns server state only; input text, mode, filters, and other UI state stay as plain `useState`.
 - The repo commits directly to `main`. Commit at the end of every task with the message given in the task.
 
@@ -143,7 +143,7 @@ export default function RootLayout({
 - [ ] **Step 4: Verify**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 ```
 
@@ -356,7 +356,7 @@ export async function fetchSearchResults(
 - [ ] **Step 6: Verify**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 ```
 
@@ -510,7 +510,7 @@ queryClient.setQueryData<FindConfig>(findKeys.config(), (current) =>
 - [ ] **Step 4: Verify**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 ```
 
@@ -617,12 +617,12 @@ The rest of the JSX (`searchResponse?.groups.map(...)`, empty states, missing so
 
 - [ ] **Step 2: Delete the searchCode action**
 
-In `apps/web/app/find/actions.ts`, delete the `searchCode` function. Keep the `export type { SearchResponse } ...` re-export only if something still imports it from there; otherwise delete it too, along with the now-unused `executeSearch` and `SearchOptions` imports (check with `pnpm typecheck` — after this task nothing should import `SearchResponse` from actions).
+In `apps/web/app/find/actions.ts`, delete the `searchCode` function. Keep the `export type { SearchResponse } ...` re-export only if something still imports it from there; otherwise delete it too, along with the now-unused `executeSearch` and `SearchOptions` imports (check with `pnpm check-types` — after this task nothing should import `SearchResponse` from actions).
 
 - [ ] **Step 3: Verify**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 ```
 
@@ -839,7 +839,7 @@ and both `isSyncPending` reads with `syncMutation.isPending`.
 - [ ] **Step 3: Verify**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 ```
 
@@ -879,7 +879,7 @@ pnpm lint:fix
 - [ ] **Step 2: Full verification**
 
 ```bash
-pnpm typecheck
+pnpm check-types
 pnpm lint
 pnpm build
 ```

@@ -7,7 +7,7 @@
     "dev": "turbo dev",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "typecheck": "turbo typecheck"
+    "check-types": "turbo check-types"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",

@@ -90,7 +90,7 @@
   --sidebar-accent: oklch(0.967 0.001 286.375);
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);  
+  --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
 .dark {
@@ -149,7 +149,9 @@
     width: calc(4 * var(--spacing) + 100%) !important;
   }
 
-  .th-line--highlighted { background: var(--color-accent); }
+  .th-line--highlighted {
+    background: var(--color-accent);
+  }
 
   .th-line--inserted {
     background-color: hsl(from var(--color-emerald-400) h s l / 0.1);
@@ -161,10 +163,16 @@
     border-color: var(--color-red-400);
   }
 
-  .th-line--error { text-decoration: underline wavy var(--color-red-400); }
+  .th-line--error {
+    text-decoration: underline wavy var(--color-red-400);
+  }
 
-  .th-line--focused { opacity: 1; }
-  .th-code:has(.th-line--focused) .th-line:not(.th-line--focused) { opacity: 0.55; }
+  .th-line--focused {
+    opacity: 1;
+  }
+  .th-code:has(.th-line--focused) .th-line:not(.th-line--focused) {
+    opacity: 0.55;
+  }
 }
 
 @keyframes rotation {

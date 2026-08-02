@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- No test runner is added. Verification is `pnpm typecheck`, `pnpm lint`, throwaway `node` scripts for pure modules, and manual browser checks.
+- No test runner is added. Verification is `pnpm check-types`, `pnpm lint`, throwaway `node` scripts for pure modules, and manual browser checks.
 - Data source is the unauthenticated GitHub REST API against public repositories. `GITHUB_TOKEN` is read from env if present but is never required.
 - No database, no session, no cookies. Repository identity lives only in the URL.
 - `cacheComponents: true` is set in `apps/web/next.config.ts`. Any component awaiting `params` or `searchParams` MUST be inside a `<Suspense>` boundary, or the build fails with a blocking-route error.
@@ -253,12 +253,12 @@ node /tmp/check-language.mjs
 
 Expected: `ALL PASS`. Clean up with `rm /tmp/check-language.mjs`.
 
-- [ ] **Step 5: Typecheck and lint**
+- [ ] **Step 5: check-types and lint**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed with no errors. If `pnpm lint` reports import ordering,
@@ -460,12 +460,12 @@ empty patch: {"code":"","decorations":[]}
 
 Clean up with `rm /tmp/check-parse-patch-edges.mjs`.
 
-- [ ] **Step 4: Typecheck and lint**
+- [ ] **Step 4: check-types and lint**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed.
@@ -653,12 +653,12 @@ re-running. That outcome still confirms the rate-limit branch works.
 
 Clean up with `rm /tmp/check-github-client.mjs`.
 
-- [ ] **Step 4: Typecheck and lint**
+- [ ] **Step 4: check-types and lint**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed.
@@ -1060,12 +1060,12 @@ export default function GitError({
 }
 ```
 
-- [ ] **Step 8: Typecheck, lint, and verify in the browser**
+- [ ] **Step 8: check-types, lint, and verify in the browser**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed. Then run `pnpm dev` and open
@@ -1504,12 +1504,12 @@ export default function RepoNotFound() {
 }
 ```
 
-- [ ] **Step 6: Typecheck, lint, and verify in the browser**
+- [ ] **Step 6: check-types, lint, and verify in the browser**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed. A failure reading
@@ -1732,12 +1732,12 @@ export default function CommitPage({
 }
 ```
 
-- [ ] **Step 4: Typecheck, lint, and verify in the browser**
+- [ ] **Step 4: check-types, lint, and verify in the browser**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed.
@@ -1856,12 +1856,12 @@ GITHUB_TOKEN=ghp_your_token_here
 The token is optional; the feature works without it.
 ```
 
-- [ ] **Step 3: Typecheck, lint, and verify**
+- [ ] **Step 3: check-types, lint, and verify**
 
 Run:
 
 ```bash
-pnpm typecheck && pnpm lint
+pnpm check-types && pnpm lint
 ```
 
 Expected: both succeed. Then run `pnpm dev` and confirm `http://localhost:3000`
@@ -1881,7 +1881,7 @@ git commit -m "docs(git): link the git viewer from home and document GITHUB_TOKE
 After Task 7, run the full check from the repo root:
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm build
+pnpm check-types && pnpm lint && pnpm build
 ```
 
 Expected: all three succeed. `pnpm build` is the important one, because Cache

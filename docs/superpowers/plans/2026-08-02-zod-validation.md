@@ -15,7 +15,7 @@
 - zod version: `^4.4.3` (matches `@repo/ui`). Use zod 4 APIs only: `z.stringbool()`, `.default()` takes the **output** type, `error.issues` (not `error.errors`), `z.ZodType<T>`.
 - No behavior changes for valid data. Error messages shown to users must stay identical where the plan says so.
 - GitHub schemas: used fields only. Do not model fields the app never reads.
-- No test framework exists and adding one is out of scope. Each task is verified with `pnpm --filter web typecheck` and `pnpm lint` from the repo root; the final task does end-to-end manual verification.
+- No test framework exists and adding one is out of scope. Each task is verified with `pnpm --filter web check-types` and `pnpm lint` from the repo root; the final task does end-to-end manual verification.
 - Code style: Biome — single quotes, no semicolons. Run `pnpm lint:fix` before each commit to fix import ordering/formatting automatically.
 - Next.js 16: `params`/`searchParams` are Promises (existing code already awaits them — keep that). Bundled docs live at `node_modules/next/dist/docs/` if a Next API question comes up.
 - The client entry point `fetchGitHub` must keep its documented "never throws" contract: schema failures return `{ status: 'error', message }`, which existing consumers already surface (pages throw to error boundaries, the lookup action renders it).
@@ -120,7 +120,7 @@ export type SearchResponse = z.infer<typeof searchResponseSchema>
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: both pass (new files are not imported yet, so nothing can break).
 
 - [ ] **Step 5: Commit**
@@ -195,7 +195,7 @@ Note: `parsed.data` structurally satisfies `SearchOptions` (defined in `lib/find
 
 - [ ] **Step 2: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 3: Smoke-test the route with curl**
@@ -291,7 +291,7 @@ import type { SearchResponse } from '@/lib/find/search-schema'
 export type { SearchResponse }
 ```
 
-`executeSearch` stays untouched; its returned objects already match the schema shape. If typecheck flags a mismatch between `ReturnType<typeof groupMatchesByProject>` and `searchResponseSchema`'s `groups`, the schema in Task 1 is wrong — fix the schema, not the code.
+`executeSearch` stays untouched; its returned objects already match the schema shape. If check-types flags a mismatch between `ReturnType<typeof groupMatchesByProject>` and `searchResponseSchema`'s `groups`, the schema in Task 1 is wrong — fix the schema, not the code.
 
 - [ ] **Step 3: Validate the response in `lib/find/search-client.ts`**
 
@@ -345,7 +345,7 @@ export async function fetchSearchResults(
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 5: Commit**
@@ -401,7 +401,7 @@ Behavior note: rg emits `begin`/`end`/`summary` events and, for non-UTF-8 conten
 
 - [ ] **Step 2: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 3: Commit**
@@ -529,7 +529,7 @@ Behavior note (intentional, per spec): a config file with invalid *items* previo
 
 - [ ] **Step 3: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 4: Commit**
@@ -737,7 +737,7 @@ In `apps/web/app/find/actions.ts`:
 
 - [ ] **Step 6: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass. Then a live check — start `pnpm --filter web dev`, open `http://localhost:3000/git/vercel/next.js`, confirm the commit list renders (proves the summary schema matches real GitHub data); open one commit (proves the detail schema). Stop the server.
 
 - [ ] **Step 7: Commit**
@@ -882,7 +882,7 @@ The function body below (the `updateFindConfig` callback) already references `re
 
 - [ ] **Step 3: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 4: Commit**
@@ -985,7 +985,7 @@ and in the JSX header:
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 5: Commit**
@@ -1056,7 +1056,7 @@ In `apps/web/app/find/file/page.tsx`, add `import { env } from '@/lib/env'` and 
 
 - [ ] **Step 4: Verify**
 
-Run: `pnpm --filter web typecheck && pnpm lint:fix && pnpm lint`
+Run: `pnpm --filter web check-types && pnpm lint:fix && pnpm lint`
 Expected: pass.
 
 - [ ] **Step 5: Commit**
@@ -1079,7 +1079,7 @@ git commit -m "feat: validate environment variables with zod"
 Run from the repo root:
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm build
+pnpm check-types && pnpm lint && pnpm build
 ```
 
 Expected: all pass.
