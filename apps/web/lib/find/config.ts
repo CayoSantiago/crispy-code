@@ -21,12 +21,23 @@ const localRootSourceSchema = z.object({
   addedAt: z.string(),
 })
 
+const resilientArray = <T extends z.ZodType>(item: T) =>
+  z
+    .array(z.unknown())
+    .transform((items) =>
+      items.flatMap((value) => {
+        const result = item.safeParse(value)
+        return result.success ? [result.data] : []
+      }),
+    )
+    .catch([])
+
 export const findConfigSchema = z.object({
-  localRoots: z.array(localRootSourceSchema),
-  githubRepos: z.array(gitHubRepoSourceSchema),
-  recentSearches: z
-    .array(z.string())
-    .transform((items) => items.slice(0, MAX_RECENT_SEARCHES)),
+  localRoots: resilientArray(localRootSourceSchema),
+  githubRepos: resilientArray(gitHubRepoSourceSchema),
+  recentSearches: resilientArray(z.string()).transform((items) =>
+    items.slice(0, MAX_RECENT_SEARCHES),
+  ),
 })
 
 export type FindConfig = z.infer<typeof findConfigSchema>

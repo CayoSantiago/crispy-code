@@ -11,7 +11,9 @@ export const gitHubRepoSchema = z.object({
 export const gitHubCommitSummarySchema = z.object({
   author: z.object({ avatar_url: z.string(), login: z.string() }).nullable(),
   commit: z.object({
-    author: z.object({ date: z.string(), name: z.string() }).nullable(),
+    author: z
+      .object({ date: z.string().optional(), name: z.string().optional() })
+      .nullable(),
     message: z.string(),
   }),
   html_url: z.string(),
