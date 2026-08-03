@@ -45,10 +45,10 @@ export function CodeBlock({
         <CopyButton
           className='absolute z-10 top-12 right-2 first:top-[5.75px] first:right-[5.75px] bg-inherit! opacity-0 group-hover/code-block:opacity-100 hover:brightness-97 dark:hover:brightness-150'
           copyText={copyText}
+          aria-label='Copy'
         >
-          <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
-          <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
-          <span className='sr-only'>Copy</span>
+          <CheckIcon className='absolute inset-0 m-auto opacity-0 scale-0 group-data-[copied="true"]/copy-button:opacity-100 group-data-[copied="true"]/copy-button:scale-100 transition-[opacity,scale]' />
+          <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0 group-data-[copied="true"]/copy-button:scale-0 transition-[opacity,scale]' />
         </CopyButton>
       )}
 

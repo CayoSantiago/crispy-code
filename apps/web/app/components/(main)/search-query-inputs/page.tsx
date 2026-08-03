@@ -6,7 +6,7 @@ import { ComponentPreview } from '@/components/component-preview'
 import {
   SearchQueryInput,
   SearchQueryToggle,
-} from '@/components/find/search-query-inputs'
+} from '@/components/search-query-inputs'
 import { highlighter } from '@/lib/highlight'
 
 const code = `'use client'
@@ -119,13 +119,13 @@ export default function ComponentsSearchQueryInputsPage() {
     >
       <FieldGroup className='max-w-sm'>
         <Field orientation='horizontal'>
-          <FieldLabel htmlFor='bookmark-query-toggle'>Bookmark</FieldLabel>
+          <FieldLabel htmlFor='bookmark-query-toggle'>Toggle</FieldLabel>
           <SearchQueryToggle queryKey='bookmark' aria-label='Toggle bookmark'>
             <BookmarkIcon />
           </SearchQueryToggle>
         </Field>
         <Field>
-          <FieldLabel htmlFor='q-query-input'>Search</FieldLabel>
+          <FieldLabel htmlFor='q-query-input'>Input</FieldLabel>
           <SearchQueryInput queryKey='q' placeholder='Search...' />
         </Field>
       </FieldGroup>

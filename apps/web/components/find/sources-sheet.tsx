@@ -38,7 +38,7 @@ export function SourcesSheet() {
     <Sheet open={open} onOpenChange={handleOpenChange}>
       <SheetContent side='right' className='w-full sm:max-w-md'>
         <SheetHeader className='border-b'>
-          <SheetTitle>Sources</SheetTitle>
+          <SheetTitle>Repos</SheetTitle>
         </SheetHeader>
         <Tabs
           defaultValue='local'

@@ -67,10 +67,14 @@ export default function ComponentsCopyButtonPage() {
       desc={metadata.description}
       {...props}
     >
-      <CopyButton size='icon' copyText={props.copyText}>
-        <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
-        <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
-        <span className='sr-only'>Copy</span>
+      <CopyButton
+        size='icon'
+        copyText={props.copyText}
+        aria-label='Copy'
+        className='text-muted-foreground'
+      >
+        <CheckIcon className='absolute inset-0 m-auto opacity-0 scale-0 group-data-[copied="true"]/copy-button:opacity-100 group-data-[copied="true"]/copy-button:scale-100 transition-[opacity,scale]' />
+        <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0 group-data-[copied="true"]/copy-button:scale-0 transition-[opacity,scale]' />
       </CopyButton>
     </ComponentPreview>
   )

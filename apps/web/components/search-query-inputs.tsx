@@ -5,7 +5,7 @@ import { Input } from '@repo/ui/components/input'
 import { cn } from '@repo/ui/lib/utils'
 import type { VariantProps } from 'class-variance-authority'
 import { useCallback, useTransition } from 'react'
-import { InlineScript } from '../inline-script'
+import { InlineScript } from './inline-script'
 
 export function SearchQueryToggle({
   queryKey,

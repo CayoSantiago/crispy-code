@@ -9,8 +9,8 @@ export function ConfigErrorMessage() {
   if (!configQuery.isError) return null
 
   return (
-    <div className='rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs'>
-      Failed to load your sources: {configQuery.error.message}
-    </div>
+    <em role='alert' className='text-xs font-medium text-destructive'>
+      Failed to load your sources: {configQuery.error?.message}
+    </em>
   )
 }

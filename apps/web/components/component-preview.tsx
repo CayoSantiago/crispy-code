@@ -21,7 +21,7 @@ export function ComponentPreview({
   desc?: string
 }) {
   return (
-    <Card className={cn('pb-0 h-max max-w-3xl', className)}>
+    <Card className={cn('pb-0 h-max max-w-3xl w-full', className)}>
       <CardHeader>
         {header ? <CardTitle>{header}</CardTitle> : null}
         {desc ? <CardDescription>{desc}</CardDescription> : null}

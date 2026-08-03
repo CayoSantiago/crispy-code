@@ -5,26 +5,31 @@ import {
   FilterIcon,
   FolderGit2Icon,
   RegexIcon,
+  SearchIcon,
 } from 'lucide-react'
 import { Suspense } from 'react'
 import { ConfigErrorMessage } from '@/components/find/config-error-message'
 import { FindAutoSync } from '@/components/find/find-auto-sync'
-import {
-  SearchQueryInput,
-  SearchQueryToggle,
-} from '@/components/find/search-query-inputs'
 import { SearchResults } from '@/components/find/search-results'
 import {
   SourcesSheet,
   ToggleSourcesSheetButton,
 } from '@/components/find/sources-sheet'
+import {
+  SearchQueryInput,
+  SearchQueryToggle,
+} from '@/components/search-query-inputs'
 import { Tooltip } from '@/components/tooltip'
 
 export default function FindPage() {
   return (
     <>
-      <div className='flex items-baseline justify-between gap-4'>
-        <h1 className='text-3xl font-semibold tracking-tight'>Code Finder</h1>
+      <div className='flex items-center gap-2'>
+        <h1 className='text-3xl font-semibold tracking-tight grow'>
+          Code Finder
+        </h1>
+
+        <FindAutoSync />
         <ToggleSourcesSheetButton
           variant='ghost'
           size='lg'
@@ -35,18 +40,19 @@ export default function FindPage() {
         </ToggleSourcesSheetButton>
       </div>
 
-      <FindAutoSync />
-
       <ConfigErrorMessage />
 
-      <div className='grid gap-2 grid-cols-1'>
-        <InputGroup className='h-9 bg-card'>
+      <div className='grid gap-2 grid-cols-1 -mt-2'>
+        <InputGroup className='h-9 bg-card rounded-full'>
           <SearchQueryInput
             queryKey='q'
             placeholder='Search code...'
             className='flex-1 rounded-none border-0 bg-transparent shadow-none ring-0 focus-visible:ring-0 aria-invalid:ring-0 dark:bg-transparent'
             autoComplete='off'
           />
+          <InputGroupAddon align='inline-start' className='pl-[11px]!'>
+            <SearchIcon />
+          </InputGroupAddon>
           <InputGroupAddon align='inline-end' className='gap-0.75 pr-1.5'>
             <Tooltip
               tooltip='Match Case'
@@ -54,6 +60,7 @@ export default function FindPage() {
                 <SearchQueryToggle
                   queryKey='case'
                   aria-label='Toggle match case'
+                  className='rounded-full'
                 />
               }
             >
@@ -65,6 +72,7 @@ export default function FindPage() {
                 <SearchQueryToggle
                   queryKey='regex'
                   aria-label='Toggle use regular expression'
+                  className='rounded-full'
                 />
               }
             >
@@ -80,7 +88,7 @@ export default function FindPage() {
             placeholder='Path glob — **/*.{ts,tsx}'
             autoComplete='off'
           />
-          <InputGroupAddon align='inline-start'>
+          <InputGroupAddon align='inline-start' className='pl-[11px]!'>
             <FilterIcon className='stroke-[1.6]' />
           </InputGroupAddon>
         </InputGroup>

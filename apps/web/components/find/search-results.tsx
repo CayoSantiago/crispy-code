@@ -163,19 +163,15 @@ export function SearchResults() {
                     >
                       <CodeBlockHeader filePath={file.absolutePath}>
                         <div className='flex shrink-0 items-center gap-0.5 ml-auto'>
-                          <Tooltip
-                            tooltip='Copy file path'
-                            render={
-                              <CopyButton
-                                copyText={file.absolutePath}
-                                aria-label='Copy path'
-                              />
-                            }
+                          <CopyButton
+                            copyText={file.absolutePath}
+                            aria-label='Copy file path'
+                            className='text-muted-foreground'
+                            render={<Tooltip tooltip='Copy file path' />}
                           >
-                            <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
-                            <FolderSearchIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
-                            <span className='sr-only'>Copy file path</span>
-                          </Tooltip>
+                            <CheckIcon className='absolute inset-0 m-auto opacity-0 scale-0 group-data-[copied="true"]/copy-button:opacity-100 group-data-[copied="true"]/copy-button:scale-100 transition-[opacity,scale]' />
+                            <FolderSearchIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0 group-data-[copied="true"]/copy-button:scale-0 transition-[opacity,scale]' />
+                          </CopyButton>
 
                           <Tooltip
                             tooltip='Open in Cursor'

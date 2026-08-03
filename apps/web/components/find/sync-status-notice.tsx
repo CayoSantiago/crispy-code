@@ -1,5 +1,6 @@
 'use client'
 
+import { Badge } from '@repo/ui/components/badge'
 import { useMutationState, useQuery } from '@tanstack/react-query'
 import {
   syncGitHubReposMutationKey,
@@ -48,8 +49,13 @@ export function SyncStatusNotice() {
   if (count < 1) return null
 
   return (
-    <p className='text-sm text-muted-foreground' aria-live='polite'>
+    <Badge
+      variant='ghost'
+      className='text-muted-foreground! shimmer'
+      aria-live='polite'
+    >
+      <span className='size-1.25 mr-0.5 rounded-full bg-emerald-400' />
       Syncing {count} {count === 1 ? 'repo' : 'repos'}…
-    </p>
+    </Badge>
   )
 }
