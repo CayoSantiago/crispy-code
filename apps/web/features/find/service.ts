@@ -1,8 +1,8 @@
+import { buildSearchGroups } from '@/features/find/cluster-search-lines'
 import { readFindConfig } from '@/features/find/config/service'
 import type { SearchResponse } from '@/features/find/schemas'
 import {
   getSearchSources,
-  groupMatchesByProject,
   type SearchOptions,
   searchAcrossSources,
 } from '@/features/find/search'
@@ -15,16 +15,13 @@ export async function executeSearch(
 ): Promise<SearchResponse> {
   const config = await readFindConfig()
   const sourceSet = await getSearchSources(config)
-  const matches = await searchAcrossSources(
-    sourceSet.available,
-    options,
-    signal,
-  )
-  const grouped = groupMatchesByProject(matches)
+  const events = await searchAcrossSources(sourceSet.available, options, signal)
+  const groups = buildSearchGroups(events)
+  const totalMatches = groups.reduce((sum, group) => sum + group.matchCount, 0)
 
   return {
-    groups: grouped,
-    totalMatches: matches.length,
+    groups,
+    totalMatches,
     missingSources: sourceSet.missing.map((source) => ({
       id: source.id,
       label: source.label,

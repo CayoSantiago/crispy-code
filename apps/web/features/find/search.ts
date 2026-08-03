@@ -7,10 +7,11 @@ import type {
   LocalRootSource,
 } from '@/features/find/config/schemas'
 import { pathExists } from '@/lib/fs'
+import type { SearchLineEvent } from './cluster-search-lines'
 import { FIND_MIRROR_ROOT } from './config/data'
-import type { SearchMatch, SearchMode } from './schemas'
+import type { SearchMode } from './schemas'
 
-export type { SearchMatch, SearchMode }
+export type { SearchMode }
 
 export type SearchOptions = {
   query: string
@@ -27,17 +28,22 @@ export type SearchSource = {
   kind: 'local' | 'github'
 }
 
-const rgMatchEventSchema = z.object({
-  type: z.literal(['match']),
-  data: z.object({
-    path: z.object({ text: z.string() }),
-    lines: z.object({ text: z.string() }),
-    line_number: z.number(),
-    submatches: z.array(z.object({ start: z.number(), end: z.number() })),
-  }),
+const rgDataSchema = z.object({
+  path: z.object({ text: z.string() }),
+  lines: z.object({ text: z.string() }),
+  line_number: z.number(),
+  submatches: z
+    .array(z.object({ start: z.number(), end: z.number() }))
+    .optional()
+    .default([]),
 })
 
-type RgMatchEvent = z.infer<typeof rgMatchEventSchema>
+const rgLineEventSchema = z.object({
+  type: z.enum(['match', 'context']),
+  data: rgDataSchema,
+})
+
+type RgLineEvent = z.infer<typeof rgLineEventSchema>
 
 function sourceFromLocal(localRoot: LocalRootSource): SearchSource {
   return {
@@ -89,9 +95,9 @@ function projectNameFor(source: SearchSource, relativePath: string): string {
   return head?.length ? head : source.label
 }
 
-function parseJsonLine(line: string): RgMatchEvent | null {
+function parseJsonLine(line: string): RgLineEvent | null {
   try {
-    const result = rgMatchEventSchema.safeParse(JSON.parse(line))
+    const result = rgLineEventSchema.safeParse(JSON.parse(line))
     return result.success ? result.data : null
   } catch {
     return null
@@ -102,7 +108,7 @@ function runRipgrep(
   source: SearchSource,
   options: SearchOptions,
   signal?: AbortSignal,
-): Promise<SearchMatch[]> {
+): Promise<SearchLineEvent[]> {
   if (signal?.aborted) {
     return Promise.resolve([])
   }
@@ -139,7 +145,7 @@ function runRipgrep(
       cwd: source.rootPath,
       stdio: ['ignore', 'pipe', 'pipe'],
     })
-    const results: SearchMatch[] = []
+    const results: SearchLineEvent[] = []
     let stdout = ''
     let stderr = ''
     let didAbort = false
@@ -165,6 +171,7 @@ function runRipgrep(
 
         const relativePath = event.data.path.text
         const normalizedRelative = relativePath.split('/').join(path.sep)
+        const kind = event.type === 'match' ? 'match' : 'context'
 
         results.push({
           sourceId: source.id,
@@ -174,10 +181,14 @@ function runRipgrep(
           relativePath: normalizedRelative,
           lineNumber: event.data.line_number,
           lineText: event.data.lines.text.replace(/\n$/, ''),
-          matchRanges: event.data.submatches.map((submatch) => ({
-            start: submatch.start,
-            end: submatch.end,
-          })),
+          kind,
+          matchRanges:
+            kind === 'match'
+              ? event.data.submatches.map((submatch) => ({
+                  start: submatch.start,
+                  end: submatch.end,
+                }))
+              : [],
           projectName: projectNameFor(source, normalizedRelative),
         })
       }
@@ -214,7 +225,7 @@ export async function searchAcrossSources(
   sources: SearchSource[],
   options: SearchOptions,
   signal?: AbortSignal,
-): Promise<SearchMatch[]> {
+): Promise<SearchLineEvent[]> {
   const query = options.query.trim()
 
   if (!query) {
@@ -228,48 +239,4 @@ export async function searchAcrossSources(
   return all
     .flat()
     .sort((left, right) => left.sourceLabel.localeCompare(right.sourceLabel))
-}
-
-export function groupMatchesByProject(matches: SearchMatch[]): Array<{
-  sourceId: string
-  sourceLabel: string
-  projectName: string
-  sourceKind: 'local' | 'github'
-  matches: SearchMatch[]
-}> {
-  const grouped = new Map<
-    string,
-    {
-      sourceId: string
-      sourceLabel: string
-      projectName: string
-      sourceKind: 'local' | 'github'
-      matches: SearchMatch[]
-    }
-  >()
-
-  for (const match of matches) {
-    const key = `${match.sourceId}:${match.projectName}`
-
-    const current = grouped.get(key)
-
-    if (current) {
-      current.matches.push(match)
-      continue
-    }
-
-    grouped.set(key, {
-      sourceId: match.sourceId,
-      sourceLabel: match.sourceLabel,
-      projectName: match.projectName,
-      sourceKind: match.sourceKind,
-      matches: [match],
-    })
-  }
-
-  return [...grouped.values()].sort((left, right) =>
-    `${left.sourceLabel}/${left.projectName}`.localeCompare(
-      `${right.sourceLabel}/${right.projectName}`,
-    ),
-  )
 }
