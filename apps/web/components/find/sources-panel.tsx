@@ -103,12 +103,6 @@ export function SourcesPanel() {
 
   return (
     <div className='grid gap-6'>
-      {configQuery.isError ? (
-        <div className='rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs'>
-          Failed to load your sources: {configQuery.error.message}
-        </div>
-      ) : null}
-
       <form
         onSubmit={(event) => {
           event.preventDefault()

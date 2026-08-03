@@ -134,7 +134,7 @@ export function SearchResults({
                       nativeButton={false}
                       variant='ghost'
                       size='sm'
-                      className='h-7 px-2 text-xs'
+                      className='h-6 px-1.5 text-[11px]'
                       render={
                         <a
                           href={`cursor://file/${encodeURIComponent(
@@ -149,7 +149,7 @@ export function SearchResults({
                       nativeButton={false}
                       variant='ghost'
                       size='sm'
-                      className='h-7 px-2 text-xs'
+                      className='h-6 px-1.5 text-[11px]'
                       render={
                         <a
                           href={`vscode://file/${encodeURIComponent(
