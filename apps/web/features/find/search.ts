@@ -16,10 +16,7 @@ export type SearchOptions = {
   query: string
   mode: SearchMode
   caseSensitive: boolean
-  wholeWord: boolean
-  extension: string
-  pathFilter: string
-  sourceFilter: string
+  pathGlob: string
   maxResultsPerSource?: number
 }
 
@@ -41,20 +38,6 @@ const rgMatchEventSchema = z.object({
 })
 
 type RgMatchEvent = z.infer<typeof rgMatchEventSchema>
-
-function normalizePathFilter(filter: string): string {
-  return filter.trim().toLowerCase()
-}
-
-function normalizeExtension(extension: string): string {
-  const normalized = extension.trim().toLowerCase()
-
-  if (!normalized) {
-    return ''
-  }
-
-  return normalized.startsWith('.') ? normalized : `.${normalized}`
-}
 
 function sourceFromLocal(localRoot: LocalRootSource): SearchSource {
   return {
@@ -124,8 +107,7 @@ function runRipgrep(
     return Promise.resolve([])
   }
 
-  const extension = normalizeExtension(options.extension)
-  const pathFilter = normalizePathFilter(options.pathFilter)
+  const pathGlob = options.pathGlob.trim()
   const maxResults = options.maxResultsPerSource ?? 100
 
   const args = [
@@ -144,12 +126,8 @@ function runRipgrep(
     args.push('--fixed-strings')
   }
 
-  if (options.wholeWord) {
-    args.push('--word-regexp')
-  }
-
-  if (extension) {
-    args.push('--glob', `*${extension}`)
+  if (pathGlob) {
+    args.push('--glob', pathGlob)
   }
 
   args.push('--regexp', options.query)
@@ -185,11 +163,6 @@ function runRipgrep(
 
         const relativePath = event.data.path.text
         const normalizedRelative = relativePath.split('/').join(path.sep)
-        const lowerRelative = normalizedRelative.toLowerCase()
-
-        if (pathFilter && !lowerRelative.includes(pathFilter)) {
-          continue
-        }
 
         results.push({
           sourceId: source.id,
@@ -246,12 +219,8 @@ export async function searchAcrossSources(
     return []
   }
 
-  const narrowed = options.sourceFilter
-    ? sources.filter((source) => source.id === options.sourceFilter)
-    : sources
-
   const all = await Promise.all(
-    narrowed.map((source) => runRipgrep(source, options, signal)),
+    sources.map((source) => runRipgrep(source, options, signal)),
   )
 
   return all

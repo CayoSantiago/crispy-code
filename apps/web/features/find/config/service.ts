@@ -15,7 +15,6 @@ export async function readFindConfig() {
     defaultValue: {
       localRoots: [],
       githubRepos: [],
-      recentSearches: [],
     },
   })
 }

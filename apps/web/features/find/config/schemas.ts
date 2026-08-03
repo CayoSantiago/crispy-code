@@ -16,14 +16,9 @@ export const localRootSourceSchema = z.object({
   addedAt: z.string(),
 })
 
-export const MAX_RECENT_SEARCHES = 8
-
 export const findConfigSchema = z.object({
   localRoots: resilientArray(localRootSourceSchema),
   githubRepos: resilientArray(gitHubRepoSourceSchema),
-  recentSearches: resilientArray(z.string()).transform((items) =>
-    items.slice(0, MAX_RECENT_SEARCHES),
-  ),
 })
 
 export type FindConfig = z.infer<typeof findConfigSchema>

@@ -2,15 +2,11 @@ import { z } from 'zod'
 
 export const searchModeSchema = z.enum(['literal', 'regex'])
 
-/** RPC search input with real booleans. */
 export const searchRpcInputSchema = z.object({
   query: z.string().trim().min(1, 'Missing query.'),
   mode: searchModeSchema.default('literal'),
   caseSensitive: z.boolean().default(false),
-  wholeWord: z.boolean().default(false),
-  extension: z.string().default(''),
-  pathFilter: z.string().default(''),
-  sourceFilter: z.string().default(''),
+  pathGlob: z.string().default(''),
 })
 
 export const searchMatchSchema = z.object({
@@ -39,8 +35,6 @@ export const searchResponseSchema = z.object({
   groups: z.array(searchGroupSchema),
   totalMatches: z.number(),
   missingSources: z.array(sourceRefSchema),
-  sourceOptions: z.array(sourceRefSchema),
-  recentSearches: z.array(z.string()),
 })
 
 export const gitHubRepoPickSchema = z.object({
