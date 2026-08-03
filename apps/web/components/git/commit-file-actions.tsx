@@ -32,13 +32,13 @@ export function CommitFileActions({
           <DropdownMenuItem
             render={<a href={file.blob_url} target='_blank' rel='noopener' />}
           >
-            <ExternalLinkIcon />
+            <ExternalLinkIcon className='text-muted-foreground' />
             <span>View on GitHub</span>
           </DropdownMenuItem>
           <DropdownMenuItem
             render={<a href={file.raw_url} target='_blank' rel='noopener' />}
           >
-            <DownloadIcon />
+            <DownloadIcon className='text-muted-foreground' />
             <span>Download file</span>
           </DropdownMenuItem>
         </DropdownMenuGroup>

@@ -9,7 +9,13 @@ export function TruncatedFilePath({
   const { filename, pathname } = getFilePathParts(filePath)
 
   return (
-    <span className={cn('font-mono flex leading-none', className)} {...props}>
+    <span
+      className={cn(
+        'font-mono flex leading-none min-w-0 whitespace-nowrap',
+        className,
+      )}
+      {...props}
+    >
       {pathname ? (
         <>
           <span className='truncate text-muted-foreground'>{pathname}</span>

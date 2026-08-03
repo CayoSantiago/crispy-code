@@ -93,7 +93,7 @@ export default async function CommitPage({
             <li key={file.filename}>
               <a
                 href={`#${encodeURIComponent(file.filename)}`}
-                className='max-w-full truncate inline-flex items-center hover:bg-accent p-2 rounded-sm w-full'
+                className='flex items-center hover:bg-accent p-2 rounded-sm'
               >
                 <div className='inline-flex items-center gap-1 mr-2 text-xs font-mono'>
                   <span className='text-emerald-600 dark:text-emerald-400'>
