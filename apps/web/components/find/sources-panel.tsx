@@ -14,7 +14,6 @@ import { orpc } from '@/lib/orpc/client'
 const emptyConfig: FindConfig = {
   localRoots: [],
   githubRepos: [],
-  recentSearches: [],
 }
 
 export function SourcesPanel() {
