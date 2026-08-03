@@ -28,7 +28,6 @@
 | Search chrome | Single search input with inline mode toggles (IDE-style) |
 | Literal / Regex | Icon toggle `.*` on the right side of the search input |
 | Case sensitive | Icon toggle `Aa` on the right side of the search input |
-| Results repo filter | Select above results to filter among returned project/repo groups (client-side) |
 | Visual language | Modern / minimal (see Visual direction) |
 | Removed filters | Whole word, search-time sources filter, recent searches, path contains, extension — full removal from UI, API, and config |
 | Path filter | Single optional `pathGlob` string passed to `rg --glob` |
@@ -59,8 +58,6 @@ Modern and minimal — one calm composition, not a settings dashboard.
 | | Search code...                   Aa  .* | |  <- input + inline toggles
 |  -----------------------------------------  |
 |  Path glob: **/*.{ts,tsx}                   |  <- quiet secondary field
-|                                             |
-|  [ All repos                         v ]    |  <- results repo filter
 |                                             |
 | project-a                          3 matches|
 |   path/file.ts:42                           |  <- flat results, hairline rules
@@ -108,13 +105,7 @@ Modern and minimal — one calm composition, not a settings dashboard.
 
 ### `SearchResults`
 
-- Extracted from current `SearchCard` results UI, restyled as a flat list.
-- **Repo filter select** at the top of the results section:
-  - Options: `All repos` plus one entry per distinct returned project/repo group (from the current search response).
-  - Client-side only: filters which groups are displayed; does **not** re-run ripgrep or restore search-time `sourceFilter`.
-  - Hidden or disabled when there are no result groups yet.
-  - Reset to `All repos` when the search query/filters change enough that the selected repo is no longer present.
-- Also includes:
+- Extracted from current `SearchCard` results UI, restyled as a flat list:
   - pending indicator (subtle)
   - search error / missing-sources warnings (inline, not heavy cards)
   - no-matches empty
@@ -154,13 +145,13 @@ Modern and minimal — one calm composition, not a settings dashboard.
 - `recentSearches`
 - `sourceOptions` (was only for the old search-time sources filter)
 
-Keep `groups`, `totalMatches`, and `missingSources`. Repo filter options are derived from `groups` on the client.
+Keep `groups`, `totalMatches`, and `missingSources`.
 
 ### Ripgrep
 
 - When `pathGlob` is non-empty after trim, pass `--glob <pathGlob>`.
 - Remove `--word-regexp`, extension `--glob *ext`, and post-filter path substring matching.
-- Always search all available sources (no search-time `sourceFilter`). Display filtering by repo happens in `SearchResults`.
+- Always search all available sources (no search-time `sourceFilter`).
 
 ### Config
 
@@ -199,12 +190,11 @@ Manual smoke only:
 4. With no sources, empty CTA opens the sheet.
 5. `Aa` and `.*` toggles sit inside the search input and affect results; whole-word control is absent.
 6. Path glob `**/*.ts` (or similar) narrows paths; clearing it restores broader results.
-7. Results repo select filters displayed groups among returned repos without re-searching.
-8. Removed controls are gone from UI; search RPC no longer accepts the removed fields.
+7. Removed controls are gone from UI; search RPC no longer accepts the removed fields.
 
 ## Implementation notes
 
-- Prefer existing `@repo/ui` primitives: `Sheet`, `Tabs`, `Select`, `Input`, `Button`, and small toggle/icon buttons for `Aa` / `.*`. Use `Card` sparingly (prefer none on the main Find surface).
+- Prefer existing `@repo/ui` primitives: `Sheet`, `Tabs`, `Input`, `Button`, and small toggle/icon buttons for `Aa` / `.*`. Use `Card` sparingly (prefer none on the main Find surface).
 - Preserve current editor deep links and result grouping behavior.
 - Follow Next.js guidance in `node_modules/next/dist/docs/` where route/server boundaries are touched.
 - Ignore `.superpowers/` brainstorm artifacts in git (already added to `.gitignore`).
