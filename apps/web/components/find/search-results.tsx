@@ -20,10 +20,13 @@ import { useSearchParams } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { CopyButton } from '@/components/copy-button'
 import { Tooltip } from '@/components/tooltip'
-import type { SearchResponse } from '@/features/find/schemas'
+import { truncateFilesByMatchBudget } from '@/features/find/cluster-search-lines'
+import type { SearchFile, SearchResponse } from '@/features/find/schemas'
 import { useDebounce } from '@/hooks/use-debounce'
 import { orpc } from '@/lib/orpc/client'
 import { ToggleSourcesSheetButton } from './sources-sheet'
+
+const MATCHES_PER_PROJECT = 10
 
 export function SearchResults() {
   const configQuery = useQuery(orpc.find.getConfig.queryOptions())
@@ -118,131 +121,204 @@ export function SearchResults() {
         </Empty>
       ) : null}
 
-      {searchResponse?.groups.map((group) => (
-        <div
-          key={`${group.sourceId}:${group.projectName}`}
-          className='grid grid-cols-1'
-        >
-          <div className='flex items-center justify-between py-2'>
-            <h3 className='text-sm font-semibold'>
-              {group.projectName}{' '}
-              <span className='text-muted-foreground font-normal'>
-                ({group.matches.length})
+      {searchResponse?.groups.map((group) => {
+        const visibleFiles = truncateFilesByMatchBudget(
+          group.files,
+          MATCHES_PER_PROJECT,
+        )
+
+        return (
+          <div
+            key={`${group.sourceId}:${group.projectName}`}
+            className='grid grid-cols-1'
+          >
+            <div className='flex items-center justify-between py-2'>
+              <h3 className='text-sm font-semibold'>
+                {group.projectName}{' '}
+                <span className='text-muted-foreground font-normal'>
+                  ({group.matchCount})
+                </span>
+              </h3>
+              <span className='text-xs text-muted-foreground'>
+                {group.sourceLabel}
               </span>
-            </h3>
-            <span className='text-xs text-muted-foreground'>
-              {group.sourceLabel}
-            </span>
-          </div>
-          <div>
-            {group.matches.slice(0, 10).map((match) => (
-              <div
-                key={`${match.absolutePath}:${match.lineNumber}`}
-                className='border-t py-2 group/code-snippet'
-              >
-                <div className='flex items-center justify-between gap-2'>
-                  <Link
-                    href={{
-                      pathname: '/find/file',
-                      query: {
-                        path: match.absolutePath,
-                        line: String(match.lineNumber),
-                      },
-                    }}
-                    className='text-xs font-mono hover:underline underline-offset-4'
-                  >
-                    {match.relativePath}:{match.lineNumber}
-                  </Link>
+            </div>
 
-                  <div className='flex shrink-0 items-center gap-0.5 opacity-0 group-hover/code-snippet:opacity-100 transition-[opacity] duration-100'>
-                    <Tooltip
-                      tooltip='Copy snippet'
-                      render={
-                        <CopyButton
-                          copyText={match.lineText}
-                          aria-label='Copy snippet'
-                        />
-                      }
+            <div>
+              {visibleFiles.map((file) => (
+                <div
+                  key={file.absolutePath}
+                  className='border-t py-2 group/file-result'
+                >
+                  <div className='flex items-center justify-between gap-2'>
+                    <Link
+                      href={{
+                        pathname: '/find/file',
+                        query: {
+                          path: file.absolutePath,
+                          line: String(firstMatchLineNumber(file)),
+                        },
+                      }}
+                      className='text-xs font-mono hover:underline underline-offset-4'
                     >
-                      <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
-                      <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
-                      <span className='sr-only'>Copy code</span>
-                    </Tooltip>
+                      {file.relativePath}
+                    </Link>
 
-                    <Tooltip
-                      tooltip='Copy file path'
-                      render={
-                        <CopyButton
-                          copyText={match.absolutePath}
-                          aria-label='Copy path'
-                        />
-                      }
-                    >
-                      <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
-                      <FolderSearchIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
-                      <span className='sr-only'>Copy file path</span>
-                    </Tooltip>
+                    <div className='flex shrink-0 items-center gap-0.5 opacity-0 group-hover/file-result:opacity-100 transition-[opacity] duration-100'>
+                      <Tooltip
+                        tooltip='Copy file path'
+                        render={
+                          <CopyButton
+                            copyText={file.absolutePath}
+                            aria-label='Copy path'
+                          />
+                        }
+                      >
+                        <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+                        <FolderSearchIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
+                        <span className='sr-only'>Copy file path</span>
+                      </Tooltip>
 
-                    <Tooltip
-                      tooltip='Open in Cursor'
-                      render={
-                        <Button
-                          nativeButton={false}
-                          variant='ghost'
-                          size='icon-sm'
-                          render={
-                            <a
-                              href={`cursor://file/${encodeURIComponent(
-                                match.absolutePath,
-                              )}:${match.lineNumber}`}
-                              aria-label='Open in Cursor'
-                            />
-                          }
-                        />
-                      }
-                    >
-                      <CursorIcon />
-                    </Tooltip>
+                      <Tooltip
+                        tooltip='Open in Cursor'
+                        render={
+                          <Button
+                            nativeButton={false}
+                            variant='ghost'
+                            size='icon-sm'
+                            render={
+                              <a
+                                href={`cursor://file/${encodeURIComponent(
+                                  file.absolutePath,
+                                )}:${firstMatchLineNumber(file)}`}
+                                aria-label='Open in Cursor'
+                              />
+                            }
+                          />
+                        }
+                      >
+                        <CursorIcon />
+                      </Tooltip>
 
-                    <Tooltip
-                      tooltip='Open in Visual Studio Code'
-                      render={
-                        <Button
-                          nativeButton={false}
-                          variant='ghost'
-                          size='icon-sm'
-                          render={
-                            <a
-                              href={`vscode://file/${encodeURIComponent(
-                                match.absolutePath,
-                              )}:${match.lineNumber}`}
-                              aria-label='Open in Visual Studio Code'
-                            />
-                          }
-                        />
-                      }
-                    >
-                      <VisualStudioCode />
-                    </Tooltip>
+                      <Tooltip
+                        tooltip='Open in Visual Studio Code'
+                        render={
+                          <Button
+                            nativeButton={false}
+                            variant='ghost'
+                            size='icon-sm'
+                            render={
+                              <a
+                                href={`vscode://file/${encodeURIComponent(
+                                  file.absolutePath,
+                                )}:${firstMatchLineNumber(file)}`}
+                                aria-label='Open in Visual Studio Code'
+                              />
+                            }
+                          />
+                        }
+                      >
+                        <VisualStudioCode />
+                      </Tooltip>
+                    </div>
                   </div>
+
+                  {file.clusters.map((cluster, clusterIndex) => (
+                    <div
+                      key={`${file.absolutePath}:${cluster.lines[0]?.lineNumber ?? clusterIndex}`}
+                    >
+                      {clusterIndex > 0 ? (
+                        <div className='my-2 border-t border-dashed border-border/70' />
+                      ) : null}
+
+                      <div className='mt-1 group/cluster relative'>
+                        <div className='absolute right-0 top-0 opacity-0 group-hover/cluster:opacity-100 transition-[opacity] duration-100'>
+                          <Tooltip
+                            tooltip='Copy snippet'
+                            render={
+                              <CopyButton
+                                copyText={clusterCopyText(cluster.lines)}
+                                aria-label='Copy snippet'
+                              />
+                            }
+                          >
+                            <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+                            <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
+                            <span className='sr-only'>Copy code</span>
+                          </Tooltip>
+                        </div>
+
+                        <div className='grid grid-cols-[auto_1fr] gap-x-3 text-xs font-mono leading-relaxed'>
+                          {cluster.lines.map((line) => {
+                            const href = {
+                              pathname: '/find/file',
+                              query: {
+                                path: file.absolutePath,
+                                line: String(line.lineNumber),
+                              },
+                            } as const
+
+                            return (
+                              <Link
+                                key={`${file.absolutePath}:${line.lineNumber}:${line.kind}`}
+                                href={href}
+                                className={
+                                  line.kind === 'match'
+                                    ? 'col-span-2 grid grid-cols-subgrid bg-foreground/5 hover:bg-foreground/8'
+                                    : 'col-span-2 grid grid-cols-subgrid text-muted-foreground hover:bg-foreground/5'
+                                }
+                              >
+                                <span className='select-none text-right text-muted-foreground tabular-nums py-0.5 pl-1'>
+                                  {line.lineNumber}
+                                </span>
+                                <pre className='overflow-x-auto overscroll-none no-scrollbar py-0.5 pr-8'>
+                                  <code>
+                                    {line.kind === 'match'
+                                      ? highlightMatchedText(
+                                          line.lineText,
+                                          line.matchRanges ?? [],
+                                        )
+                                      : line.lineText}
+                                  </code>
+                                </pre>
+                              </Link>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <pre className='mt-1 overflow-x-auto overscroll-none no-scrollbar text-xs leading-relaxed'>
-                  <code>
-                    {highlightMatchedText(match.lineText, match.matchRanges)}
-                  </code>
-                </pre>
-              </div>
-            ))}
-            {group.matches.length > 10 ? (
-              <p className='border-t py-2 text-xs text-muted-foreground'>
-                Showing 10 of {group.matches.length} matches for this project.
-              </p>
-            ) : null}
+              ))}
+
+              {group.matchCount > MATCHES_PER_PROJECT ? (
+                <p className='border-t py-2 text-xs text-muted-foreground'>
+                  Showing {MATCHES_PER_PROJECT} of {group.matchCount} matches
+                  for this project.
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
+}
+
+function firstMatchLineNumber(file: SearchFile): number {
+  for (const cluster of file.clusters) {
+    for (const line of cluster.lines) {
+      if (line.kind === 'match') {
+        return line.lineNumber
+      }
+    }
+  }
+
+  return file.clusters[0]?.lines[0]?.lineNumber ?? 1
+}
+
+function clusterCopyText(lines: Array<{ lineText: string }>): string {
+  return lines.map((line) => line.lineText).join('\n')
 }
 
 function highlightMatchedText(
