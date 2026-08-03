@@ -153,12 +153,12 @@
     background: var(--color-accent);
   }
 
-  .th-line--inserted {
+  .th-line--inserted, .th-line:has(span.th-inserted) {
     background-color: hsl(from var(--color-emerald-400) h s l / 0.1);
     border-color: var(--color-emerald-400);
   }
 
-  .th-line--deleted {
+  .th-line--deleted, .th-deleted {
     background-color: hsl(from var(--color-red-400) h s l / 0.1);
     border-color: var(--color-red-400);
   }

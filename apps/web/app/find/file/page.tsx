@@ -3,7 +3,7 @@ import path from 'node:path'
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
-import { CodeBlock } from '@/components/code-block'
+import { CodeBlock, CodeBlockHeader } from '@/components/code-block'
 import { languageForFilename } from '@/features/diff/language-for-filename'
 import { FIND_MIRROR_ROOT } from '@/features/find/config/data'
 import { readFindConfig } from '@/features/find/config/service'
@@ -47,9 +47,7 @@ async function assertKnownSource(filePath: string): Promise<void> {
 
 export default async function FindFilePage({
   searchParams,
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>
-}) {
+}: PageProps<'/find/file'>) {
   const parsed = fileParamsSchema.safeParse(await searchParams)
 
   if (!parsed.success) {
@@ -69,25 +67,18 @@ export default async function FindFilePage({
   }
 
   const language = languageForFilename(filePath)
-  const lines = code.split('\n')
-  const focusStart = line > 3 ? line - 3 : 1
-  const focusEnd = line > 0 ? Math.min(line + 3, lines.length) : 0
-  const focusSlice =
-    line > 0
-      ? lines
-          .slice(focusStart - 1, focusEnd)
-          .map((item, index) => `${focusStart + index}: ${item}`)
-          .join('\n')
-      : null
+
   const props = createHighlightedCodeBlockProps({
     code,
     highlighter,
     lang: language,
     title: filePath,
+    lineNumbers: true,
+    decorations: [{ lines: line, className: 'th-line--highlighted' }],
   })
 
   return (
-    <section className='grid gap-3 w-full'>
+    <section className='grid grid-cols-1 gap-6 w-full'>
       <div className='grid gap-1'>
         <h1 className='text-lg font-semibold'>File view</h1>
         <p className='text-xs text-muted-foreground font-mono'>
@@ -95,18 +86,10 @@ export default async function FindFilePage({
           {line > 0 ? `:${line}` : ''}
         </p>
       </div>
-      {focusSlice ? (
-        <div className='rounded-md border bg-card p-3'>
-          <p className='text-xs font-medium mb-2'>Jumped to line {line}</p>
-          <pre className='text-xs overflow-x-auto'>
-            <code>{focusSlice}</code>
-          </pre>
-        </div>
-      ) : null}
-      <CodeBlock
-        {...props}
-        className='[--code-block-max-height:--spacing(full)] [&_div]:data-[slot="code"]:overflow-y-visible'
-      />
+
+      <CodeBlock variant='full' {...props}>
+        <CodeBlockHeader filePath={filePath} />
+      </CodeBlock>
     </section>
   )
 }

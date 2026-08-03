@@ -1,39 +1,5 @@
-const BY_EXTENSION: Record<string, string> = {
-  bash: 'shell',
-  cjs: 'js',
-  css: 'css',
-  diff: 'diff',
-  ejs: 'ejs',
-  htm: 'html',
-  html: 'html',
-  http: 'http',
-  js: 'js',
-  json: 'json',
-  json5: 'json',
-  jsonc: 'json',
-  jsx: 'jsx',
-  markdown: 'markdown',
-  md: 'markdown',
-  mdx: 'markdown',
-  mermaid: 'mermaid',
-  mjs: 'js',
-  mts: 'ts',
-  patch: 'diff',
-  py: 'python',
-  rkt: 'scheme',
-  scm: 'scheme',
-  sh: 'shell',
-  sql: 'sql',
-  svelte: 'svelte',
-  toml: 'toml',
-  ts: 'ts',
-  tsx: 'tsx',
-  vue: 'vue',
-  xml: 'html',
-  yaml: 'yaml',
-  yml: 'yaml',
-  zsh: 'shell',
-}
+import { getFilenameFromPath } from '@/lib/file'
+import { highlighter } from '@/lib/highlight'
 
 const BY_FILENAME: Record<string, string> = {
   dockerfile: 'dockerfile',
@@ -45,12 +11,10 @@ const BY_FILENAME: Record<string, string> = {
  * Anything unrecognised falls back to plain text, which still renders correctly.
  */
 export function languageForFilename(path: string): string {
-  const filename = path.split('/').pop()?.toLowerCase() ?? ''
+  const filename = getFilenameFromPath(path)
 
   const byFilename = BY_FILENAME[filename]
-  if (byFilename) {
-    return byFilename
-  }
+  if (byFilename) return byFilename
 
   // Covers .env, .env.local, .env.production and friends.
   if (filename.startsWith('.env')) {
@@ -64,5 +28,5 @@ export function languageForFilename(path: string): string {
     return 'plaintext'
   }
 
-  return BY_EXTENSION[filename.slice(dot + 1)] ?? 'plaintext'
+  return highlighter.normalizeLanguage(filename.slice(dot + 1))
 }

@@ -70,7 +70,6 @@ export async function getCommit(
     `${repoPath(owner, repo)}/commits/${encodeURIComponent(sha)}`,
     gitHubCommitDetailSchema,
   )
-
   if (result.status === 'ok') {
     // A commit addressed by SHA is immutable, so it can be cached indefinitely.
     cacheLife('max')

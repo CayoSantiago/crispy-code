@@ -8,9 +8,9 @@ import {
 } from '@repo/ui/components/card'
 import { notFound } from 'next/navigation'
 import { z } from 'zod'
+import { TruncatedFilePath } from '@/components/file'
 import { FileDiff } from '@/components/git/file-diff'
 import { RateLimitNotice } from '@/components/git/rate-limit-notice'
-import { TruncatedFilePath } from '@/components/git/truncated-file-path'
 import { getCommit } from '@/features/github/commits'
 
 // GitHub caps the files array in a commit response at 300 entries.
@@ -95,12 +95,14 @@ export default async function CommitPage({
                 href={`#${encodeURIComponent(file.filename)}`}
                 className='max-w-full truncate inline-flex items-center hover:bg-accent p-2 rounded-sm w-full'
               >
-                <span className='text-emerald-600 dark:text-emerald-400 text-xs'>
-                  +{file.additions}
-                </span>
-                <span className='text-red-600 dark:text-red-400 text-xs px-2'>
-                  -{file.deletions}
-                </span>
+                <div className='inline-flex items-center gap-1 mr-2 text-xs font-mono'>
+                  <span className='text-emerald-600 dark:text-emerald-400'>
+                    +{file.additions}
+                  </span>
+                  <span className='text-red-600 dark:text-red-400'>
+                    -{file.deletions}
+                  </span>
+                </div>
                 <TruncatedFilePath filePath={file.filename} />
               </a>
             </li>

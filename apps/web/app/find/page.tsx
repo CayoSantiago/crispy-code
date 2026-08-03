@@ -13,7 +13,7 @@ export default async function FindPage() {
   await queryClient.prefetchQuery(orpc.find.getConfig.queryOptions())
 
   return (
-    <div className='grid gap-6 w-full'>
+    <div className='grid grid-cols-1 gap-6 w-full'>
       <h1 className='text-3xl font-semibold tracking-tight'>Code Finder</h1>
 
       <HydrationBoundary state={dehydrate(queryClient)}>

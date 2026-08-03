@@ -5,10 +5,10 @@ export type ParsedPatch = {
   decorations: HighlightDecoration[]
 }
 
-type LineClass =
-  | 'th-line--deleted'
-  | 'th-line--highlighted'
-  | 'th-line--inserted'
+// type LineClass =
+//   | 'th-line--deleted'
+//   | 'th-line--highlighted'
+//   | 'th-line--inserted'
 
 /**
  * Converts a GitHub unified diff into highlightable source plus per-line
@@ -19,7 +19,7 @@ type LineClass =
  */
 export function parsePatch(patch: string): ParsedPatch {
   const codeLines: string[] = []
-  const lineClasses: Array<LineClass | null> = []
+  const lineClasses: Array<string | null> = []
 
   for (const line of patch.split('\n')) {
     // '\ No newline at end of file' is diff metadata, not file content.
@@ -28,8 +28,10 @@ export function parsePatch(patch: string): ParsedPatch {
     }
 
     if (line.startsWith('@@')) {
-      // codeLines.push(line)
-      // lineClasses.push('th-line--highlighted')
+      codeLines.push(line)
+      lineClasses.push(
+        'th-line--highlighted text-muted-foreground [&>span]:text-muted-foreground!',
+      )
       continue
     }
 
@@ -60,7 +62,7 @@ export function parsePatch(patch: string): ParsedPatch {
  * Line coordinates are one-based and inclusive.
  */
 function toDecorations(
-  lineClasses: ReadonlyArray<LineClass | null>,
+  lineClasses: ReadonlyArray<string | null>,
 ): HighlightDecoration[] {
   const decorations: HighlightDecoration[] = []
   let index = 0

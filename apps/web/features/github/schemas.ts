@@ -26,6 +26,8 @@ export const gitHubCommitFileSchema = z.object({
   additions: z.number(),
   deletions: z.number(),
   filename: z.string(),
+  blob_url: z.url(),
+  raw_url: z.url(),
   /** Absent for binary files and for diffs GitHub considers too large. */
   patch: z.string().optional(),
   previous_filename: z.string().optional(),

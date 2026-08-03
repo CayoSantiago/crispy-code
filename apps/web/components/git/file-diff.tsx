@@ -1,9 +1,10 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
-import { CodeBlock } from '@/components/code-block'
+import { CodeBlock, CodeBlockHeader } from '@/components/code-block'
 import { languageForFilename } from '@/features/diff/language-for-filename'
 import { parsePatch } from '@/features/diff/parse-patch'
 import type { GitHubCommitFile } from '@/features/github/types'
 import { highlighter } from '@/lib/highlight'
+import { CommitFileActions } from './commit-file-actions'
 
 export function FileDiff({ file }: { file: GitHubCommitFile }) {
   const heading = (
@@ -46,10 +47,7 @@ export function FileDiff({ file }: { file: GitHubCommitFile }) {
     decorations,
     highlighter,
     lang: languageForFilename(file.filename),
-    // lineNumbers: true,
     title: file.filename,
-    className:
-      '[--code-block-max-height:--spacing(full)] [&_div]:data-[slot="code"]:overflow-y-visible',
   })
 
   return (
@@ -58,7 +56,11 @@ export function FileDiff({ file }: { file: GitHubCommitFile }) {
       className='grid gap-2 w-full grid-cols-1 scroll-m-4'
     >
       {heading}
-      <CodeBlock {...props} />
+      <CodeBlock variant='full' {...props}>
+        <CodeBlockHeader filePath={file.filename}>
+          <CommitFileActions file={file} className='ml-auto' />
+        </CodeBlockHeader>
+      </CodeBlock>
     </div>
   )
 }

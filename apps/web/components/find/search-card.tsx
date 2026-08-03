@@ -108,7 +108,7 @@ export function SearchCard() {
       <CardHeader>
         <CardTitle>Search</CardTitle>
       </CardHeader>
-      <CardContent className='grid gap-4'>
+      <CardContent className='grid gap-4 grid-cols-1'>
         {hasNoSources ? (
           <Empty className='border rounded-md'>
             <EmptyHeader>
