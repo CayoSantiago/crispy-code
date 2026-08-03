@@ -28,7 +28,7 @@ export type SearchSource = {
 }
 
 const rgMatchEventSchema = z.object({
-  type: z.literal('match'),
+  type: z.literal(['match', 'context']),
   data: z.object({
     path: z.object({ text: z.string() }),
     lines: z.object({ text: z.string() }),
@@ -116,6 +116,8 @@ function runRipgrep(
     '--max-count',
     String(maxResults),
     '--ignore-case',
+    '--context',
+    String(2),
   ]
 
   if (options.caseSensitive) {

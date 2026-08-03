@@ -1,7 +1,5 @@
-import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { z } from 'zod'
-import { FIND_MIRROR_ROOT } from '@/features/find/config/data'
 import {
   findConfigSchema,
   type GitHubRepoSource,
@@ -15,15 +13,16 @@ import {
   gitHubLookupOutputSchema,
   searchResponseSchema,
   searchRpcInputSchema,
+  syncGitHubReposInputSchema,
   syncResultSchema,
 } from '@/features/find/schemas'
 import { executeSearch } from '@/features/find/service'
+import { syncGitHubRepos } from '@/features/find/sync-github-repos'
 import { createSourceId } from '@/features/find/utils'
 import { fetchGitHub } from '@/features/github/client'
 import { gitHubRepoLookupListSchema } from '@/features/github/schemas'
 import type { GitHubRepoLookupItem } from '@/features/github/types'
 import { isReadableDir, normalizeLocalPath } from '@/lib/fs'
-import { runGit } from '@/lib/git'
 import { base } from '@/lib/orpc/base'
 
 function nowIso(): string {
@@ -223,108 +222,8 @@ export const findRouter = {
         })
       }
     }),
-  syncSelectedGitHubRepos: base
-    .input(z.void())
+  syncGitHubRepos: base
+    .input(syncGitHubReposInputSchema)
     .output(z.array(syncResultSchema))
-    .handler(async () => {
-      const config = await readFindConfig()
-      const results: Array<z.infer<typeof syncResultSchema>> = []
-
-      for (const repo of config.githubRepos) {
-        const destination = path.join(FIND_MIRROR_ROOT, repo.owner, repo.repo)
-
-        const parent = path.dirname(destination)
-        const repoUrl = `https://github.com/${repo.owner}/${repo.repo}.git`
-        await mkdir(parent, { recursive: true })
-
-        const cloneResult = await runGit([
-          'clone',
-          '--depth',
-          '1',
-          repoUrl,
-          destination,
-        ])
-
-        if (!cloneResult.ok && !cloneResult.error?.includes('already exists')) {
-          await updateFindConfig((current) => ({
-            ...current,
-            githubRepos: current.githubRepos.map((item) =>
-              item.id === repo.id
-                ? { ...item, syncError: cloneResult.error ?? 'Clone failed' }
-                : item,
-            ),
-          }))
-
-          results.push({
-            id: repo.id,
-            ok: false,
-            message: cloneResult.error ?? 'Clone failed',
-          })
-          continue
-        }
-
-        const fetchResult = await runGit(
-          ['fetch', '--depth', '1', 'origin', 'HEAD'],
-          destination,
-        )
-
-        if (!fetchResult.ok) {
-          await updateFindConfig((current) => ({
-            ...current,
-            githubRepos: current.githubRepos.map((item) =>
-              item.id === repo.id
-                ? { ...item, syncError: fetchResult.error ?? 'Fetch failed' }
-                : item,
-            ),
-          }))
-
-          results.push({
-            id: repo.id,
-            ok: false,
-            message: fetchResult.error ?? 'Fetch failed',
-          })
-          continue
-        }
-
-        const resetResult = await runGit(
-          ['checkout', '--detach', '--force', 'FETCH_HEAD'],
-          destination,
-        )
-
-        if (!resetResult.ok) {
-          await updateFindConfig((current) => ({
-            ...current,
-            githubRepos: current.githubRepos.map((item) =>
-              item.id === repo.id
-                ? { ...item, syncError: resetResult.error ?? 'Reset failed' }
-                : item,
-            ),
-          }))
-
-          results.push({
-            id: repo.id,
-            ok: false,
-            message: resetResult.error ?? 'Reset failed',
-          })
-          continue
-        }
-
-        await updateFindConfig((current) => ({
-          ...current,
-          githubRepos: current.githubRepos.map((item) =>
-            item.id === repo.id
-              ? { ...item, syncedAt: nowIso(), syncError: null }
-              : item,
-          ),
-        }))
-
-        results.push({
-          id: repo.id,
-          ok: true,
-          message: 'Synced',
-        })
-      }
-
-      return results
-    }),
+    .handler(async ({ input }) => syncGitHubRepos(input)),
 }

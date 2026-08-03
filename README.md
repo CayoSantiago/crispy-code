@@ -47,6 +47,7 @@ Search runs with `ripgrep` and respects each project's `.gitignore` entries.
 
 ### Notes
 
-- GitHub sync writes mirrors to `~/.crispy-code/repos`.
+- GitHub mirrors live under `~/.crispy-code/repos` and refresh automatically when you select a repo or revisit `/find` (at most once per hour per repo).
 - App config is stored in `~/.crispy-code/config.json`.
+- Failed mirrors can be retried from the Sources → GitHub tab.
 - `GITHUB_TOKEN` is optional but helps avoid low unauthenticated rate limits.

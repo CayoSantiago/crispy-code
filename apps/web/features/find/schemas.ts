@@ -48,6 +48,13 @@ export const gitHubLookupOutputSchema = z.object({
   repos: z.array(gitHubRepoPickSchema),
 })
 
+export const syncGitHubReposModeSchema = z.enum(['stale', 'force'])
+
+export const syncGitHubReposInputSchema = z.object({
+  mode: syncGitHubReposModeSchema,
+  ids: z.array(z.string().min(1)).optional(),
+})
+
 export const syncResultSchema = z.object({
   id: z.string(),
   ok: z.boolean(),
@@ -59,4 +66,5 @@ export type SearchRpcInput = z.infer<typeof searchRpcInputSchema>
 export type SearchMatch = z.infer<typeof searchMatchSchema>
 export type SearchResponse = z.infer<typeof searchResponseSchema>
 export type GitHubRepoPick = z.infer<typeof gitHubRepoPickSchema>
+export type SyncGitHubReposInput = z.infer<typeof syncGitHubReposInputSchema>
 export type SyncResult = z.infer<typeof syncResultSchema>

@@ -2,13 +2,17 @@
 
 import { isDefinedError } from '@orpc/client'
 import { Button } from '@repo/ui/components/button'
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@repo/ui/components/empty'
 import { Field, FieldError, FieldLabel } from '@repo/ui/components/field'
 import { Input } from '@repo/ui/components/input'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Trash2Icon } from 'lucide-react'
-import { useState } from 'react'
 import type { FindConfig } from '@/features/find/config/schemas'
-import type { GitHubRepoPick } from '@/features/find/schemas'
 import { orpc } from '@/lib/orpc/client'
 
 const emptyConfig: FindConfig = {
@@ -44,54 +48,7 @@ export function SourcesPanel() {
     }),
   )
 
-  const repoLookupMutation = useMutation(
-    orpc.find.lookupGitHubRepos.mutationOptions({
-      onSuccess: (result) => {
-        setRepoLookupError(null)
-        setRepoResults(result.repos)
-      },
-      onError: (error) => {
-        setRepoResults([])
-        if (isDefinedError(error)) {
-          if (error.code === 'RATE_LIMITED') {
-            setRepoLookupError(
-              error.data.resetAt
-                ? `Rate limited until ${new Date(error.data.resetAt).toLocaleTimeString()}.`
-                : 'Rate limited by GitHub. Try again soon.',
-            )
-            return
-          }
-          setRepoLookupError(error.message || 'Could not load repositories.')
-          return
-        }
-        setRepoLookupError(
-          error instanceof Error
-            ? error.message
-            : 'Could not load repositories.',
-        )
-      },
-    }),
-  )
-
-  const repoSelectionMutation = useMutation(
-    orpc.find.setGitHubRepoSelection.mutationOptions({
-      onSuccess: async (_data, { repo, selected }) => {
-        setRepoResults((current) =>
-          current.map((item) =>
-            item.id === repo.id ? { ...item, selected } : item,
-          ),
-        )
-        await queryClient.invalidateQueries({
-          queryKey: orpc.find.getConfig.key(),
-        })
-      },
-    }),
-  )
-
   const config = configQuery.data ?? emptyConfig
-  const [repoOwner, setRepoOwner] = useState('')
-  const [repoLookupError, setRepoLookupError] = useState<string | null>(null)
-  const [repoResults, setRepoResults] = useState<GitHubRepoPick[]>([])
 
   const addLocalRootError = addLocalRootMutation.isError
     ? isDefinedError(addLocalRootMutation.error)
@@ -158,64 +115,16 @@ export function SourcesPanel() {
             </div>
           ))}
         </div>
-      ) : null}
-
-      <div className='grid gap-3'>
-        <Field>
-          <FieldLabel htmlFor='githubOwner'>GitHub user or org</FieldLabel>
-          <Input
-            id='githubOwner'
-            value={repoOwner}
-            onChange={(event) => setRepoOwner(event.target.value)}
-            placeholder='vercel'
-            autoCapitalize='none'
-            spellCheck={false}
-          />
-        </Field>
-        <Button
-          type='button'
-          disabled={repoLookupMutation.isPending}
-          onClick={() => {
-            setRepoLookupError(null)
-            repoLookupMutation.mutate({ ownerOrOrg: repoOwner })
-          }}
-        >
-          {repoLookupMutation.isPending
-            ? 'Loading repos...'
-            : 'Load repositories'}
-        </Button>
-        {repoLookupError ? <FieldError>{repoLookupError}</FieldError> : null}
-
-        {repoResults.length ? (
-          <div className='grid gap-2 max-h-64 overflow-auto rounded-md border p-2'>
-            {repoResults.map((repo) => (
-              <label
-                key={repo.id}
-                className='flex items-center justify-between gap-3 rounded-sm px-2 py-1.5 hover:bg-muted'
-              >
-                <span className='text-sm font-mono'>
-                  {repo.owner}/{repo.repo}
-                </span>
-                <input
-                  type='checkbox'
-                  checked={repo.selected}
-                  disabled={repoSelectionMutation.isPending}
-                  onChange={(event) =>
-                    repoSelectionMutation.mutate({
-                      repo: {
-                        id: repo.id,
-                        owner: repo.owner,
-                        repo: repo.repo,
-                      },
-                      selected: event.target.checked,
-                    })
-                  }
-                />
-              </label>
-            ))}
-          </div>
-        ) : null}
-      </div>
+      ) : (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No local folders yet</EmptyTitle>
+            <EmptyDescription>
+              Add a project folder on this machine to include it in search.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      )}
     </div>
   )
 }

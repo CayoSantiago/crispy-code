@@ -14,8 +14,8 @@ import {
   TabsTrigger,
 } from '@repo/ui/components/tabs'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { GitHubSourcesPanel } from '@/components/find/github-sources-panel'
 import { SourcesPanel } from '@/components/find/sources-panel'
-import { SyncPanel } from '@/components/find/sync-panel'
 
 const QUERY_KEY = 'sources'
 
@@ -39,18 +39,18 @@ export function SourcesSheet() {
           <SheetTitle>Sources</SheetTitle>
         </SheetHeader>
         <Tabs
-          defaultValue='sources'
+          defaultValue='local'
           className='flex min-h-0 flex-1 flex-col px-4 pb-4'
         >
           <TabsList variant='line' className='w-full'>
-            <TabsTrigger value='sources'>Sources</TabsTrigger>
-            <TabsTrigger value='sync'>Sync</TabsTrigger>
+            <TabsTrigger value='local'>Local</TabsTrigger>
+            <TabsTrigger value='github'>GitHub</TabsTrigger>
           </TabsList>
-          <TabsContent value='sources' className='overflow-y-auto pt-4'>
+          <TabsContent value='local' className='overflow-y-auto pt-4'>
             <SourcesPanel />
           </TabsContent>
-          <TabsContent value='sync' className='overflow-y-auto pt-4'>
-            <SyncPanel />
+          <TabsContent value='github' className='overflow-y-auto pt-4'>
+            <GitHubSourcesPanel />
           </TabsContent>
         </Tabs>
       </SheetContent>
