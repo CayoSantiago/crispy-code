@@ -126,6 +126,10 @@ export function SearchResults() {
           group.files,
           MATCHES_PER_PROJECT,
         )
+        const visibleMatchCount = visibleFiles.reduce(
+          (sum, file) => sum + file.matchCount,
+          0,
+        )
 
         return (
           <div
@@ -291,10 +295,10 @@ export function SearchResults() {
                 </div>
               ))}
 
-              {group.matchCount > MATCHES_PER_PROJECT ? (
+              {visibleMatchCount < group.matchCount ? (
                 <p className='border-t py-2 text-xs text-muted-foreground'>
-                  Showing {MATCHES_PER_PROJECT} of {group.matchCount} matches
-                  for this project.
+                  Showing {visibleMatchCount} of {group.matchCount} matches for
+                  this project.
                 </p>
               ) : null}
             </div>
