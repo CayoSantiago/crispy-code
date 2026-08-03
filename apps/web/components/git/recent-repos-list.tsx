@@ -1,44 +1,49 @@
 'use client'
 
-import { Button } from '@repo/ui/components/button'
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemTitle,
+} from '@repo/ui/components/item'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowUpRightFromSquareIcon } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useEffect, useState } from 'react'
 import { readRecentRepos } from '@/features/github/recent-repos'
 
 export function RecentReposList() {
-  const [repos, setRepos] = useState<string[]>([])
-
-  useEffect(() => {
-    setRepos(readRecentRepos())
-  }, [])
-
-  if (repos.length === 0) {
-    return null
-  }
+  const { data: repos } = useQuery({
+    queryKey: ['recent-repos'],
+    queryFn: readRecentRepos,
+  })
 
   return (
-    <div className='flex flex-wrap gap-2 items-center'>
-      <span className='text-xs text-muted-foreground'>Recent:</span>
-      {repos.map((recent) => {
+    <ItemGroup>
+      {repos?.map((recent) => {
         const [owner, repo] = recent.split('/')
         if (!owner || !repo) {
           return null
         }
 
         return (
-          <Button
+          <Item
             key={recent}
-            nativeButton={false}
-            variant='outline'
-            size='sm'
-            className='h-7 text-xs'
+            size='xs'
             render={<Link href={`/git/${owner}/${repo}` as Route} />}
           >
-            {recent}
-          </Button>
+            <ItemContent>
+              <ItemTitle className='text-sm'>{repo}</ItemTitle>
+              <ItemDescription>{owner}</ItemDescription>
+            </ItemContent>
+            <ItemActions className='opacity-0 group-hover/item:opacity-100 transition-[opacity]'>
+              <ArrowUpRightFromSquareIcon className='size-3.5 stroke-[1.6] text-muted-foreground' />
+            </ItemActions>
+          </Item>
         )
       })}
-    </div>
+    </ItemGroup>
   )
 }

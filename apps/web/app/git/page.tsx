@@ -22,6 +22,7 @@ export default function GitPage() {
           <RepoForm />
         </CardContent>
       </Card>
+
       <RecentReposList />
     </div>
   )
