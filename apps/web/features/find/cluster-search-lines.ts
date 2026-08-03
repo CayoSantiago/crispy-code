@@ -1,4 +1,8 @@
-import type { SearchFile, SearchGroup, SearchLine } from '@/features/find/schemas'
+import type {
+  SearchFile,
+  SearchGroup,
+  SearchLine,
+} from '@/features/find/schemas'
 
 export type SearchLineEvent = {
   sourceId: string
