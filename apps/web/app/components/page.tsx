@@ -7,8 +7,14 @@ import {
   ItemTitle,
 } from '@repo/ui/components/item'
 import { ChevronLeftIcon } from 'lucide-react'
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { COMPONENTS_NAV } from '@/data/routes'
+
+export const metadata = {
+  title: 'Components',
+  description: 'List of custom made components.',
+} satisfies Metadata
 
 export default function ComponentsPage() {
   return (

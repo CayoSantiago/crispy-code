@@ -1,4 +1,5 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import img from '@/assets/crispy-sites-hero.png'
 import { Browser } from '@/components/browser'
@@ -82,12 +83,17 @@ const props = createHighlightedCodeBlockProps({
   lineNumbers: true,
 })
 
+export const metadata = {
+  title: 'Browser',
+  description: 'Visually display websites.',
+} satisfies Metadata
+
 export default function ComponentsCopyButtonPage() {
   return (
     <ComponentPreview
       id='browser'
-      header='Browser'
-      desc='Visually display websites.'
+      header={metadata.title}
+      desc={metadata.description}
       {...props}
     >
       <Browser url='crispysites.com'>

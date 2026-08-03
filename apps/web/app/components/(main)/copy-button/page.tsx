@@ -1,5 +1,6 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { CheckIcon, CopyIcon } from 'lucide-react'
+import type { Metadata } from 'next'
 import { ComponentPreview } from '@/components/component-preview'
 import { CopyButton } from '@/components/copy-button'
 import { highlighter } from '@/lib/highlight'
@@ -53,12 +54,17 @@ const props = createHighlightedCodeBlockProps({
   lineNumbers: true,
 })
 
+export const metadata = {
+  title: 'Copy Button',
+  description: 'Button to copy text to clip board with confirmation.',
+} satisfies Metadata
+
 export default function ComponentsCopyButtonPage() {
   return (
     <ComponentPreview
       id='copy-button'
-      header='Copy Button'
-      desc='Button to copy text to clip board with confirmation.'
+      header={metadata.title}
+      desc={metadata.description}
       {...props}
     >
       <CopyButton size='icon' copyText={props.copyText}>

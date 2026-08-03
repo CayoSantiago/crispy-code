@@ -1,4 +1,5 @@
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import type { Metadata } from 'next'
 import { CodeBlock } from '@/components/code-block'
 import { ComponentPreview } from '@/components/component-preview'
 import { highlighter } from '@/lib/highlight'
@@ -63,12 +64,18 @@ const props = createHighlightedCodeBlockProps({
   ],
 })
 
+export const metadata = {
+  title: 'Code Block',
+  description:
+    'Code block to display code with line numbers, syntax highlighting, line highlighting, and copy functionality.',
+} satisfies Metadata
+
 export default function ExampleCodeBlock1() {
   return (
     <ComponentPreview
       id='code-block'
-      header='Code Block'
-      desc='Code block to display code with line numbers, syntax highlighting, line highlighting, and copy functionality.'
+      header={metadata.title}
+      desc={metadata.description}
       {...props}
     >
       <CodeBlock {...props} />

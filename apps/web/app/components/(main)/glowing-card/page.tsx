@@ -5,6 +5,7 @@ import {
   CardTitle,
 } from '@repo/ui/components/card'
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import type { Metadata } from 'next'
 import { ComponentPreview } from '@/components/component-preview'
 import { highlighter } from '@/lib/highlight'
 
@@ -174,12 +175,17 @@ const props = createHighlightedCodeBlockProps({
   lineNumbers: true,
 })
 
+export const metadata = {
+  title: 'Glowing Card',
+  description: 'Card with animated glowing borders.',
+} satisfies Metadata
+
 export default function ComponentsCopyButtonPage() {
   return (
     <ComponentPreview
       id='glowing-card'
-      header='Glowing Card'
-      desc='Card with animated glowing borders.'
+      header={metadata.title}
+      desc={metadata.description}
       {...props}
     >
       <Card variant='glowing' className='w-full max-w-sm'>
