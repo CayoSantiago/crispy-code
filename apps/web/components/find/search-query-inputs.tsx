@@ -4,7 +4,7 @@ import { buttonVariants } from '@repo/ui/components/button'
 import { Input } from '@repo/ui/components/input'
 import { cn } from '@repo/ui/lib/utils'
 import type { VariantProps } from 'class-variance-authority'
-import { useTransition } from 'react'
+import { useCallback, useTransition } from 'react'
 import { InlineScript } from '../inline-script'
 
 export function SearchQueryToggle({
@@ -16,20 +16,7 @@ export function SearchQueryToggle({
   ...props
 }: React.ComponentProps<'label'> &
   VariantProps<typeof buttonVariants> & { queryKey: string }) {
-  const [, startTransition] = useTransition()
-
-  const handleToggle = (isActive: boolean) => {
-    if (typeof window === 'undefined') return
-
-    const newSearch = new URLSearchParams(location.search)
-
-    if (isActive) newSearch.set(queryKey, 'true')
-    else newSearch.delete(queryKey)
-
-    startTransition(() =>
-      history.replaceState(null, '', `?${newSearch.toString()}`),
-    )
-  }
+  const setSearchQuery = useSetSearchQuery()
 
   return (
     <>
@@ -45,7 +32,9 @@ export function SearchQueryToggle({
         <input
           type='checkbox'
           className='hidden'
-          onChange={(e) => handleToggle(e.target.checked)}
+          onChange={(e) =>
+            setSearchQuery(queryKey, e.target.checked ? 'true' : null)
+          }
           id={`${queryKey}-query-toggle`}
         />
       </label>
@@ -60,9 +49,26 @@ export function SearchQueryInput({
   queryKey,
   ...props
 }: React.ComponentProps<typeof Input> & { queryKey: string }) {
+  const setSearchQuery = useSetSearchQuery()
+
+  return (
+    <>
+      <Input
+        id={`${queryKey}-query-input`}
+        onChange={(event) => setSearchQuery(queryKey, event.target.value)}
+        {...props}
+      />
+      <InlineScript
+        html={`{var s=new URLSearchParams(location.search);var v=decodeURIComponent(s.get("${queryKey}")??"");var e=document.getElementById("${queryKey}-query-input");if (e){e.value=v}}`}
+      />
+    </>
+  )
+}
+
+function useSetSearchQuery() {
   const [, startTransition] = useTransition()
 
-  const handleChange = (val: string) => {
+  return useCallback((queryKey: string, val: string | null) => {
     if (typeof window === 'undefined') return
 
     const newSearch = new URLSearchParams(location.search)
@@ -75,18 +81,5 @@ export function SearchQueryInput({
     startTransition(() =>
       history.replaceState(null, '', `?${newSearch.toString()}`),
     )
-  }
-
-  return (
-    <>
-      <Input
-        id={`${queryKey}-query-input`}
-        onChange={(event) => handleChange(event.target.value)}
-        {...props}
-      />
-      <InlineScript
-        html={`{var s=new URLSearchParams(location.search);var v=decodeURIComponent(s.get("${queryKey}")??"");var e=document.getElementById("${queryKey}-query-input");if (e){e.value=v}}`}
-      />
-    </>
-  )
+  }, [])
 }

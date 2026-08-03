@@ -70,4 +70,10 @@ export const COMPONENTS_NAV: Array<{
     desc: 'Card with animated glowing borders.',
     href: '/glowing-card',
   },
+  {
+    id: 'search-query-inputs',
+    title: 'Search Query Inputs',
+    desc: 'Inputs synced to browser search params with no flash on initial render.',
+    href: '/search-query-inputs',
+  },
 ]

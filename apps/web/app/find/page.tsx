@@ -12,7 +12,7 @@ import { FindAutoSync } from '@/components/find/find-auto-sync'
 import {
   SearchQueryInput,
   SearchQueryToggle,
-} from '@/components/find/search-filters'
+} from '@/components/find/search-query-inputs'
 import { SearchResults } from '@/components/find/search-results'
 import {
   SourcesSheet,

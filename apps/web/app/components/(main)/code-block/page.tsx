@@ -70,7 +70,7 @@ export const metadata = {
     'Code block to display code with line numbers, syntax highlighting, line highlighting, and copy functionality.',
 } satisfies Metadata
 
-export default function ExampleCodeBlock1() {
+export default function ComponentsCodeBlockPage() {
   return (
     <ComponentPreview
       id='code-block'

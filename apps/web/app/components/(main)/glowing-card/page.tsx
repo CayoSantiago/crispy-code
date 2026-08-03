@@ -180,7 +180,7 @@ export const metadata = {
   description: 'Card with animated glowing borders.',
 } satisfies Metadata
 
-export default function ComponentsCopyButtonPage() {
+export default function ComponentsGlowingCardPage() {
   return (
     <ComponentPreview
       id='glowing-card'
