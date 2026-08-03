@@ -1,5 +1,6 @@
 'use client'
 
+import { CursorIcon, VisualStudioCode } from '@dev.icons/react'
 import { Button } from '@repo/ui/components/button'
 import {
   Empty,
@@ -7,49 +8,82 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from '@repo/ui/components/empty'
-import { CopyIcon, FolderSearchIcon, LoaderCircleIcon } from 'lucide-react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import {
+  CheckIcon,
+  CopyIcon,
+  FolderSearchIcon,
+  LoaderCircleIcon,
+} from 'lucide-react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { CopyButton } from '@/components/copy-button'
+import { Tooltip } from '@/components/tooltip'
 import type { SearchResponse } from '@/features/find/schemas'
+import { useDebounce } from '@/hooks/use-debounce'
+import { orpc } from '@/lib/orpc/client'
+import { ToggleSourcesSheetButton } from './sources-sheet'
 
-export type SearchResultsProps = {
-  hasNoSources: boolean
-  isPending: boolean
-  errorMessage: string | null
-  searchResponse: SearchResponse | null
-  onOpenSources: () => void
-}
+export function SearchResults() {
+  const configQuery = useQuery(orpc.find.getConfig.queryOptions())
 
-export function SearchResults({
-  hasNoSources,
-  isPending,
-  errorMessage,
-  searchResponse,
-  onOpenSources,
-}: SearchResultsProps) {
+  const search = useSearchParams()
+
+  const query = decodeURIComponent(search.get('q') ?? '')
+  const debouncedQuery = useDebounce(query, 220)
+
+  const debouncedPathGlob = useDebounce(
+    decodeURIComponent(search.get('path') ?? ''),
+    220,
+  )
+
+  const searchInput = {
+    query: debouncedQuery,
+    mode:
+      search.get('regex') === 'true'
+        ? ('regex' as const)
+        : ('literal' as const),
+    caseSensitive: search.get('case') === 'true',
+    pathGlob: debouncedPathGlob,
+  }
+
+  const searchResult = useQuery(
+    orpc.find.search.queryOptions({
+      input: searchInput,
+      enabled: searchInput.query.length > 0,
+      placeholderData: keepPreviousData,
+    }),
+  )
+
+  const searchResponse: SearchResponse | null = query.trim()
+    ? (searchResult.data ?? null)
+    : null
+
+  const hasNoSources =
+    configQuery.isSuccess &&
+    configQuery.data.localRoots.length === 0 &&
+    configQuery.data.githubRepos.length === 0
+
+  if (hasNoSources) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Start by adding a source</EmptyTitle>
+          <EmptyDescription>
+            Add a local folder or select GitHub repositories, then search across
+            your code.
+          </EmptyDescription>
+        </EmptyHeader>
+        <ToggleSourcesSheetButton type='button' variant='outline' size='sm'>
+          Open Sources
+        </ToggleSourcesSheetButton>
+      </Empty>
+    )
+  }
+
   return (
-    <div className='grid gap-4'>
-      {hasNoSources ? (
-        <Empty>
-          <EmptyHeader>
-            <EmptyTitle>Start by adding a source</EmptyTitle>
-            <EmptyDescription>
-              Add a local folder or select GitHub repositories, then search
-              across your code.
-            </EmptyDescription>
-          </EmptyHeader>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            onClick={onOpenSources}
-          >
-            Open Sources
-          </Button>
-        </Empty>
-      ) : null}
-
+    <div className='grid gap-4 grid-cols-1'>
       {searchResponse?.missingSources.length ? (
         <div className='border-l-2 border-amber-500/50 pl-3 text-xs text-muted-foreground'>
           Missing sources:{' '}
@@ -59,13 +93,13 @@ export function SearchResults({
         </div>
       ) : null}
 
-      {errorMessage ? (
+      {searchResult.error?.message ? (
         <div className='border-l-2 border-destructive/50 pl-3 text-xs text-destructive'>
-          Search failed: {errorMessage}
+          Search failed: {searchResult.error?.message}
         </div>
       ) : null}
 
-      {isPending ? (
+      {searchResult.isFetching ? (
         <div className='flex items-center gap-2 text-xs text-muted-foreground'>
           <LoaderCircleIcon className='size-3.5 animate-spin' />
           Searching...
@@ -85,7 +119,10 @@ export function SearchResults({
       ) : null}
 
       {searchResponse?.groups.map((group) => (
-        <div key={`${group.sourceId}:${group.projectName}`} className='grid'>
+        <div
+          key={`${group.sourceId}:${group.projectName}`}
+          className='grid grid-cols-1'
+        >
           <div className='flex items-center justify-between py-2'>
             <h3 className='text-sm font-semibold'>
               {group.projectName}{' '}
@@ -101,7 +138,7 @@ export function SearchResults({
             {group.matches.slice(0, 10).map((match) => (
               <div
                 key={`${match.absolutePath}:${match.lineNumber}`}
-                className='border-t py-2'
+                className='border-t py-2 group/code-snippet'
               >
                 <div className='flex items-center justify-between gap-2'>
                   <Link
@@ -117,52 +154,79 @@ export function SearchResults({
                     {match.relativePath}:{match.lineNumber}
                   </Link>
 
-                  <div className='flex shrink-0 items-center gap-0.5'>
-                    <CopyButton
-                      copyText={match.lineText}
-                      aria-label='Copy snippet'
-                    >
-                      <CopyIcon />
-                    </CopyButton>
-                    <CopyButton
-                      copyText={match.absolutePath}
-                      aria-label='Copy path'
-                    >
-                      <FolderSearchIcon />
-                    </CopyButton>
-                    <Button
-                      nativeButton={false}
-                      variant='ghost'
-                      size='sm'
-                      className='h-6 px-1.5 text-[11px]'
+                  <div className='flex shrink-0 items-center gap-0.5 opacity-0 group-hover/code-snippet:opacity-100 transition-[opacity] duration-100'>
+                    <Tooltip
+                      tooltip='Copy snippet'
                       render={
-                        <a
-                          href={`cursor://file/${encodeURIComponent(
-                            match.absolutePath,
-                          )}:${match.lineNumber}`}
+                        <CopyButton
+                          copyText={match.lineText}
+                          aria-label='Copy snippet'
                         />
                       }
                     >
-                      Cursor
-                    </Button>
-                    <Button
-                      nativeButton={false}
-                      variant='ghost'
-                      size='sm'
-                      className='h-6 px-1.5 text-[11px]'
+                      <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+                      <CopyIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
+                      <span className='sr-only'>Copy code</span>
+                    </Tooltip>
+
+                    <Tooltip
+                      tooltip='Copy file path'
                       render={
-                        <a
-                          href={`vscode://file/${encodeURIComponent(
-                            match.absolutePath,
-                          )}:${match.lineNumber}`}
+                        <CopyButton
+                          copyText={match.absolutePath}
+                          aria-label='Copy path'
                         />
                       }
                     >
-                      VS Code
-                    </Button>
+                      <CheckIcon className='absolute inset-0 m-auto opacity-0 group-data-[copied="true"]/copy-button:opacity-100' />
+                      <FolderSearchIcon className='absolute inset-0 m-auto group-data-[copied="true"]/copy-button:opacity-0' />
+                      <span className='sr-only'>Copy file path</span>
+                    </Tooltip>
+
+                    <Tooltip
+                      tooltip='Open in Cursor'
+                      render={
+                        <Button
+                          nativeButton={false}
+                          variant='ghost'
+                          size='icon-sm'
+                          render={
+                            <a
+                              href={`cursor://file/${encodeURIComponent(
+                                match.absolutePath,
+                              )}:${match.lineNumber}`}
+                              aria-label='Open in Cursor'
+                            />
+                          }
+                        />
+                      }
+                    >
+                      <CursorIcon />
+                    </Tooltip>
+
+                    <Tooltip
+                      tooltip='Open in Visual Studio Code'
+                      render={
+                        <Button
+                          nativeButton={false}
+                          variant='ghost'
+                          size='icon-sm'
+                          render={
+                            <a
+                              href={`vscode://file/${encodeURIComponent(
+                                match.absolutePath,
+                              )}:${match.lineNumber}`}
+                              aria-label='Open in Visual Studio Code'
+                            />
+                          }
+                        />
+                      }
+                    >
+                      <VisualStudioCode />
+                    </Tooltip>
                   </div>
                 </div>
-                <pre className='mt-1 overflow-x-auto text-xs leading-relaxed'>
+                <pre className='mt-1 overflow-x-auto overscroll-none no-scrollbar text-xs leading-relaxed'>
                   <code>
                     {highlightMatchedText(match.lineText, match.matchRanges)}
                   </code>

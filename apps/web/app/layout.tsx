@@ -6,6 +6,7 @@ import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { highlightCss } from '@/lib/highlight'
 import '@/lib/orpc/client.server'
+import { TooltipProvider } from '@repo/ui/components/tooltip'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -34,11 +35,13 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning>
         <ThemeProvider>
-          <Providers>
-            {children}
-            {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
-            <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
-          </Providers>
+          <TooltipProvider delay={600}>
+            <Providers>
+              {children}
+              {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
+              <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+            </Providers>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>
