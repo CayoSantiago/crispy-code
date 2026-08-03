@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { highlightCss } from '@/lib/highlight'
 import '@/lib/orpc/client.server'
 import { TooltipProvider } from '@repo/ui/components/tooltip'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -33,16 +34,17 @@ export default function RootLayout({
         'scroll-smooth',
       )}
     >
-      <body suppressHydrationWarning>
+      <body className='bg-muted/50 dark:bg-background' suppressHydrationWarning>
         <ThemeProvider>
           <TooltipProvider delay={600}>
             <Providers>
-              {children}
-              {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
-              <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+              <NuqsAdapter>{children}</NuqsAdapter>
             </Providers>
           </TooltipProvider>
         </ThemeProvider>
+
+        {/** biome-ignore lint/security/noDangerouslySetInnerHtml: fine here */}
+        <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
       </body>
     </html>
   )

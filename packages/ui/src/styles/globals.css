@@ -132,9 +132,6 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   button:not(:disabled),
   [role="button"]:not(:disabled) {
     cursor: pointer;
@@ -153,14 +150,12 @@
     background: var(--color-accent);
   }
 
-  .th-line--inserted,
-  .th-line:has(span.th-inserted) {
+  .th-line--inserted {
     background-color: hsl(from var(--color-emerald-400) h s l / 0.1);
     border-color: var(--color-emerald-400);
   }
 
-  .th-line--deleted,
-  .th-deleted {
+  .th-line--deleted {
     background-color: hsl(from var(--color-red-400) h s l / 0.1);
     border-color: var(--color-red-400);
   }

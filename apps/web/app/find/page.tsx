@@ -22,7 +22,7 @@ import { Tooltip } from '@/components/tooltip'
 
 export default function FindPage() {
   return (
-    <div className='grid gap-6 grid-cols-1 w-full'>
+    <>
       <div className='flex items-baseline justify-between gap-4'>
         <h1 className='text-3xl font-semibold tracking-tight'>Code Finder</h1>
         <ToggleSourcesSheetButton
@@ -93,6 +93,6 @@ export default function FindPage() {
       <Suspense>
         <SourcesSheet />
       </Suspense>
-    </div>
+    </>
   )
 }

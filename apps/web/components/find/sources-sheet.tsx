@@ -27,8 +27,10 @@ export function SourcesSheet() {
 
   const handleOpenChange = (isOpen: boolean) => {
     const newSearch = new URLSearchParams(search.toString())
+
     if (!isOpen) newSearch.delete(QUERY_KEY)
     else newSearch.set(QUERY_KEY, 'open')
+
     router.replace(`?${newSearch.toString()}`)
   }
 
@@ -63,6 +65,7 @@ export function ToggleSourcesSheetButton(
 ) {
   const toggleOpen = () => {
     if (typeof window === 'undefined') return
+
     const newSearch = new URLSearchParams(window.location.search)
     const open = newSearch.get(QUERY_KEY) === 'open'
 

@@ -27,7 +27,7 @@ export function ComponentPreview({
         {desc ? <CardDescription>{desc}</CardDescription> : null}
       </CardHeader>
 
-      <CardContent className='grid grid-cols-1 auto-rows-fr place-items-center min-h-64'>
+      <CardContent className='grid grid-cols-1 auto-rows-fr place-items-center min-h-64 isolate'>
         {children}
       </CardContent>
 
