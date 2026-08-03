@@ -1,13 +1,14 @@
 'use client'
 
-import { useIsMutating, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  useIsMutating,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query'
 import type { SyncGitHubReposInput } from '@/features/find/schemas'
 import { orpc } from '@/lib/orpc/client'
 
-export const syncGitHubReposMutationKey = [
-  'find',
-  'syncGitHubRepos',
-] as const
+export const syncGitHubReposMutationKey = ['find', 'syncGitHubRepos'] as const
 
 async function invalidateFindQueries(
   queryClient: ReturnType<typeof useQueryClient>,

@@ -186,9 +186,7 @@ export function GitHubSourcesPanel() {
                     variant='ghost'
                     size='icon-sm'
                     disabled={syncPending || busy}
-                    onClick={() =>
-                      sync({ mode: 'force', ids: [repo.id] })
-                    }
+                    onClick={() => sync({ mode: 'force', ids: [repo.id] })}
                   >
                     <RefreshCwIcon />
                     <span className='sr-only'>

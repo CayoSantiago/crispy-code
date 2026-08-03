@@ -8,9 +8,9 @@ import {
 } from '@/features/find/config/service'
 import type { SyncResult } from '@/features/find/schemas'
 import {
-  selectReposToSync,
   SYNC_CONCURRENCY,
   type SyncGitHubReposMode,
+  selectReposToSync,
 } from '@/features/find/sync-eligibility'
 import { runGit } from '@/lib/git'
 
@@ -117,11 +117,7 @@ export async function syncGitHubRepos(input: {
   ids?: string[]
 }): Promise<SyncResult[]> {
   const config = await readFindConfig()
-  const targets = selectReposToSync(
-    config.githubRepos,
-    input.mode,
-    input.ids,
-  )
+  const targets = selectReposToSync(config.githubRepos, input.mode, input.ids)
 
   return mapPool(targets, SYNC_CONCURRENCY, syncOneGitHubRepo)
 }

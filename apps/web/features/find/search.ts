@@ -28,7 +28,7 @@ export type SearchSource = {
 }
 
 const rgMatchEventSchema = z.object({
-  type: z.literal(['match', 'context']),
+  type: z.literal(['match']),
   data: z.object({
     path: z.object({ text: z.string() }),
     lines: z.object({ text: z.string() }),
