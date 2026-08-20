@@ -1,4 +1,5 @@
 import { writeFile } from 'node:fs/promises'
+import { cache } from 'react'
 import { FIND_CONFIG_PATH, FIND_HOME } from '@/features/find/config/data'
 import {
   type FindConfig,
@@ -8,7 +9,7 @@ import { ensureDir, getParsedJsonFileData } from '@/lib/fs'
 
 let updateQueue: Promise<unknown> = Promise.resolve()
 
-export async function readFindConfig() {
+export const readFindConfig = cache(async () => {
   return getParsedJsonFileData({
     path: FIND_CONFIG_PATH,
     schema: findConfigSchema,
@@ -17,7 +18,7 @@ export async function readFindConfig() {
       githubRepos: [],
     },
   })
-}
+})
 
 export async function updateFindConfig(
   update: (current: FindConfig) => FindConfig,

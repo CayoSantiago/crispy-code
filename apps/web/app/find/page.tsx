@@ -25,9 +25,7 @@ export default function FindPage() {
   return (
     <>
       <div className='flex items-center gap-2'>
-        <h1 className='text-3xl font-semibold tracking-tight grow'>
-          Code Finder
-        </h1>
+        <h1 className='text-2xl font-bold tracking-tight grow'>Code Finder</h1>
 
         <FindAutoSync />
         <ToggleSourcesSheetButton
