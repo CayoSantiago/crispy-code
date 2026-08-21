@@ -5,8 +5,10 @@ import { createDBClient } from '#client'
 config({
   path: [
     resolve(import.meta.dirname, '../.env.local'),
-    resolve(import.meta.dirname, '../../../.env.example'),
+    resolve(import.meta.dirname, '../../../.env.local'),
+    resolve(import.meta.dirname, '../../../.env'),
   ],
+  quiet: true,
 })
 
 const db = createDBClient()

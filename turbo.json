@@ -3,12 +3,18 @@
   "ui": "tui",
   "globalEnv": [
     "DATABASE_URL",
+    "DATABASE_URL_UNPOOLED",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "GITHUB_CLIENT_ID",
     "GITHUB_CLIENT_SECRET",
     "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET"
+    "GOOGLE_CLIENT_SECRET",
+    "CONTEXT",
+    "REVIEW_ID",
+    "DEPLOY_PRIME_URL",
+    "NEON_API_KEY",
+    "NEON_PROJECT_ID"
   ],
   "tasks": {
     "build": {

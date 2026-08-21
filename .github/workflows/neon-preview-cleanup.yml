@@ -1,0 +1,46 @@
+name: Delete Neon preview branch
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-preview-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete Neon branch preview-pr-N
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+          BRANCH_NAME: preview-pr-${{ github.event.number }}
+        run: |
+          set -euo pipefail
+          if [ -z "${NEON_API_KEY}" ] || [ -z "${NEON_PROJECT_ID}" ]; then
+            echo "NEON_API_KEY and NEON_PROJECT_ID secrets are required"
+            exit 1
+          fi
+
+          AUTH="Authorization: Bearer ${NEON_API_KEY}"
+          BASE="https://console.neon.tech/api/v2/projects/${NEON_PROJECT_ID}"
+          RESPONSE="$(curl -sS -H "${AUTH}" -H "Accept: application/json" \
+            "${BASE}/branches?search=${BRANCH_NAME}")"
+          BRANCH_ID="$(echo "${RESPONSE}" | jq -r --arg name "${BRANCH_NAME}" \
+            '.branches[]? | select(.name == $name) | .id' | head -n1)"
+
+          if [ -z "${BRANCH_ID}" ] || [ "${BRANCH_ID}" = "null" ]; then
+            echo "Branch ${BRANCH_NAME} not found; nothing to delete"
+            exit 0
+          fi
+
+          CODE="$(curl -sS -o /tmp/neon-del.json -w "%{http_code}" -X DELETE \
+            -H "${AUTH}" -H "Accept: application/json" \
+            "${BASE}/branches/${BRANCH_ID}")"
+
+          if [ "${CODE}" = "200" ] || [ "${CODE}" = "204" ] || [ "${CODE}" = "404" ]; then
+            echo "Deleted or already gone: ${BRANCH_NAME}"
+            exit 0
+          fi
+
+          echo "Failed to delete branch ${BRANCH_NAME} (HTTP ${CODE})"
+          cat /tmp/neon-del.json
+          exit 1

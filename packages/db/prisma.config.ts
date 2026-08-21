@@ -5,8 +5,10 @@ import { defineConfig, env } from 'prisma/config'
 config({
   path: [
     resolve(import.meta.dirname, './.env.local'),
-    resolve(import.meta.dirname, '../../.env.example'),
+    resolve(import.meta.dirname, '../../.env.local'),
+    resolve(import.meta.dirname, '../../.env'),
   ],
+  quiet: true,
 })
 
 export default defineConfig({
@@ -16,6 +18,6 @@ export default defineConfig({
     seed: 'tsx src/seed.ts',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    url: process.env.DATABASE_URL_UNPOOLED || env('DATABASE_URL'),
   },
 })
