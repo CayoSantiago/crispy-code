@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   transpilePackages: ['@repo/ui'],
   typedRoutes: true,
   cacheComponents: true,
+  devIndicators: false,
   turbopack: {
     rules: {
       '*.svg': {

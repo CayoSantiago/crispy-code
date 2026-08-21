@@ -34,7 +34,7 @@ export default function RootLayout({
         'scroll-smooth',
       )}
     >
-      <body className='bg-muted/50 dark:bg-background' suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <ThemeProvider>
           <TooltipProvider delay={600}>
             <Providers>
