@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   cacheComponents: true,
   devIndicators: false,
+  experimental: {
+    useTypeScriptCli: false,
+  },
   turbopack: {
     rules: {
       '*.svg': {
