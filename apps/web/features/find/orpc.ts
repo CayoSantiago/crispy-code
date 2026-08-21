@@ -24,6 +24,7 @@ import { gitHubRepoLookupListSchema } from '@/features/github/schemas'
 import type { GitHubRepoLookupItem } from '@/features/github/types'
 import { isReadableDir, normalizeLocalPath } from '@/lib/fs'
 import { base } from '@/lib/orpc/base'
+import { successResponseSchema } from '@/lib/schemas'
 
 function nowIso(): string {
   return new Date().toISOString()
@@ -40,12 +41,8 @@ export const findRouter = {
       executeSearch({ ...input, maxResultsPerSource: 50 }, signal),
     ),
   addLocalRoot: base
-    .input(
-      z.object({
-        localPath: z.string().trim().min(1),
-      }),
-    )
-    .output(z.object({ success: z.string() }))
+    .input(z.object({ localPath: z.string().trim().min(1) }))
+    .output(successResponseSchema)
     .handler(async ({ input, errors }) => {
       const normalized = normalizeLocalPath(input.localPath)
       const absolute = path.resolve(normalized)
@@ -74,12 +71,14 @@ export const findRouter = {
     }),
   removeLocalRoot: base
     .input(z.object({ id: z.string().min(1) }))
-    .output(z.void())
+    .output(successResponseSchema)
     .handler(async ({ input }) => {
       await updateFindConfig((current) => ({
         ...current,
         localRoots: current.localRoots.filter((item) => item.id !== input.id),
       }))
+
+      return { success: 'Removed local source.' }
     }),
   lookupGitHubRepos: base
     .input(z.object({ ownerOrOrg: z.string().trim().min(1) }))

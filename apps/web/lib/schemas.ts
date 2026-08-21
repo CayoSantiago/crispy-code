@@ -11,3 +11,9 @@ export function resilientArray<T extends z.ZodType>(item: T) {
     )
     .catch([])
 }
+
+export const successResponseSchema = z.object({
+  success: z.string(),
+})
+
+export type SuccessResponse = z.infer<typeof successResponseSchema>
