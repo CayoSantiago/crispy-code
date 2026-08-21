@@ -30,7 +30,7 @@ export default function BlocksPage() {
 
       <ItemGroup className='max-w-md w-full mx-auto'>
         {BLOCKS_NAV.map(({ id, title, desc, href }) => (
-          <Item key={id} size='sm' render={<Link href={`/blocks${href}`} />}>
+          <Item key={id} size='sm' render={<Link href={href} />}>
             <ItemContent>
               <ItemTitle>{title}</ItemTitle>
               <ItemDescription>{desc}</ItemDescription>

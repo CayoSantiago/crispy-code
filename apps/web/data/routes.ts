@@ -1,25 +1,13 @@
 import type { Route } from 'next'
 
-export type BaseRoute = Route extends `${infer S}`
-  ? S extends `/${infer B}/${infer _}`
-    ? `/${B}`
-    : S extends `/${infer B}`
-      ? `/${B}`
-      : never
-  : never
-
-export type SubRoute<TBase extends BaseRoute> = Route extends `${infer S}`
-  ? S extends `${TBase}${infer R}`
-    ? `${R}`
-    : never
-  : never
-
-export const ROOT_NAV: Array<{
+export type RouteData = {
   id: string
   title: string
   desc: string
-  href: BaseRoute
-}> = [
+  href: Route
+}
+
+export const ROOT_NAV = [
   {
     id: 'components',
     title: 'Components',
@@ -44,80 +32,70 @@ export const ROOT_NAV: Array<{
     desc: 'Search local and GitHub project code in one place.',
     href: '/find',
   },
-]
+] satisfies RouteData[]
 
-export const COMPONENTS_NAV: Array<{
-  id: string
-  title: string
-  desc: string
-  href: SubRoute<'/components'>
-}> = [
+export const COMPONENTS_NAV = [
   {
     id: 'copy-button',
     title: 'Copy Button',
     desc: 'Button to copy text to clip board with confirmation.',
-    href: '/copy-button',
+    href: '/components/copy-button',
   },
   {
     id: 'code-block',
     title: 'Code Block',
     desc: 'Code block to display code with line numbers, syntax highlighting, line highlighting, and copy functionality.',
-    href: '/code-block',
+    href: '/components/code-block',
   },
   {
     id: 'browser',
     title: 'Browser',
     desc: 'Visually display websites.',
-    href: '/browser',
+    href: '/components/browser',
   },
   {
     id: 'glowing-card',
     title: 'Glowing Card',
     desc: 'Card with animated glowing borders.',
-    href: '/glowing-card',
+    href: '/components/glowing-card',
   },
   {
     id: 'search-query-inputs',
     title: 'Search Query Inputs',
     desc: 'Inputs synced to browser search params with no flash on initial render.',
-    href: '/search-query-inputs',
+    href: '/components/search-query-inputs',
   },
   {
     id: 'search-query-tabs',
     title: 'Search Query Tabs',
     desc: 'Tabs synced to browser search params with no flash on initial render.',
-    href: '/search-query-tabs',
+    href: '/components/search-query-tabs',
   },
   {
     id: 'local-date-time',
     title: 'Local Date-Time',
     desc: "Display date-time in user's local timezone with no flash on initial render",
-    href: '/local-date-time',
+    href: '/components/local-date-time',
   },
-]
+] satisfies RouteData[]
 
-export const BLOCKS_NAV: Array<{
-  id: string
-  title: string
-  desc: string
-  href: SubRoute<'/blocks'>
-}> = [
+export const BLOCKS_NAV = [
   {
     id: 'login-form',
     title: 'Login Form',
     desc: 'Simple login form with OAuth options.',
-    href: '/login-form',
+    href: '/blocks/login-form',
   },
   {
     id: 'signup-form',
     title: 'Sign Up Form',
     desc: 'Simple signup form with OAuth options.',
-    href: '/signup-form',
+    href: '/blocks/signup-form',
   },
   {
     id: 'forgot-password-form',
     title: 'Forgot Password Form',
     desc: 'Simple forgot password form.',
-    href: '/forgot-password-form',
+    href: '/blocks/forgot-password-form',
   },
-]
+] satisfies RouteData[]

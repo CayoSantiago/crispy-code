@@ -37,11 +37,7 @@ export default function ComponentsPage() {
 
         <ItemGroup className='max-w-md w-full mx-auto'>
           {COMPONENTS_NAV.map(({ id, title, desc, href }) => (
-            <Item
-              key={id}
-              size='sm'
-              render={<Link href={`/components${href}`} />}
-            >
+            <Item key={id} size='sm' render={<Link href={href} />}>
               <ItemContent>
                 <ItemTitle>{title}</ItemTitle>
                 <ItemDescription>{desc}</ItemDescription>
