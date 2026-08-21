@@ -38,13 +38,15 @@ The token is optional; the feature works without it.
 
 ## Local database
 
-Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@repo/db`). The schema has no app models yet; Find config still lives in `~/.crispy-code/config.json`.
+Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@repo/db`). Auth lives in `packages/auth` (`@repo/auth`) and uses Better Auth with the Prisma adapter. Find config still lives in `~/.crispy-code/config.json`.
 
 ```bash
 cp .env.example .env
 ```
 
-Copy the same `DATABASE_URL` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` in that file too.
+Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` and OAuth client IDs in that file too.
+
+GitHub and Google sign-in stay off until both the client ID and secret for that provider are set. OAuth callback URLs are `{BETTER_AUTH_URL}/api/auth/callback/github` and `{BETTER_AUTH_URL}/api/auth/callback/google`. `GITHUB_TOKEN` is still only for the GitHub REST client; it is not the GitHub OAuth app secret.
 
 ```bash
 pnpm db:up
@@ -58,7 +60,7 @@ pnpm db:ping
 - `pnpm db:studio` opens Prisma Studio.
 - `pnpm db:down` stops the container (the data volume is kept).
 
-`pnpm dev` does not start Docker. The app still runs without `DATABASE_URL` until something imports `@repo/db`.
+`pnpm dev` does not start Docker. The app requires `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. `DATABASE_URL` is required once something imports `@repo/db` or `@repo/auth/server`.
 
 ## Code Finder
 

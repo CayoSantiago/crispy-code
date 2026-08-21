@@ -1,0 +1,35 @@
+{
+  "name": "@repo/auth",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "auth:generate": "auth generate --config src/cli.ts"
+  },
+  "dependencies": {
+    "@better-auth/prisma-adapter": "catalog:",
+    "@repo/db": "workspace:*",
+    "better-auth": "catalog:",
+    "react": "catalog:",
+    "server-only": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/biome-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "auth": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    "./server": {
+      "default": "./src/server.ts"
+    },
+    "./client": {
+      "default": "./src/client.ts"
+    }
+  },
+  "imports": {
+    "#config": "./src/config.ts"
+  }
+}

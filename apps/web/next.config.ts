@@ -1,9 +1,10 @@
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@repo/db', '@repo/ui'],
+  transpilePackages: ['@repo/auth', '@repo/db', '@repo/ui'],
   typedRoutes: true,
   cacheComponents: true,
+  agentRules: false,
   devIndicators: false,
   turbopack: {
     rules: {

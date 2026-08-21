@@ -4,7 +4,9 @@
     "rootDir": ".",
     "outDir": "dist",
     "declaration": false,
-    "declarationMap": false
+    "declarationMap": false,
+    "noEmit": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src", "prisma.config.ts", "generated"],
   "exclude": ["node_modules", "dist"]
