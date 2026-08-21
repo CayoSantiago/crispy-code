@@ -15,7 +15,7 @@ catalog:
   "@tailwindcss/postcss": ^4
 
   "@turbo/gen": ^2.9.15
-  "@types/node": ^20.19.43
+  "@types/node": ^24
   "@types/react": ^19
   "@types/react-dom": ^19
 

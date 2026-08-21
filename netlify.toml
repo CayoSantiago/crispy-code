@@ -2,7 +2,7 @@
   command = "pnpm exec turbo run build --filter=web"
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = "24"
 
 [[plugins]]
   package = "/netlify/plugins/neon-db"

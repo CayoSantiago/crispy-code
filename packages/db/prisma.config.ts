@@ -11,8 +11,7 @@ config({
   quiet: true,
 })
 
-const datasourceUrl =
-  process.env.DATABASE_URL_UNPOOLED || env('DATABASE_URL')
+const datasourceUrl = process.env.DATABASE_URL_UNPOOLED || env('DATABASE_URL')
 
 try {
   new URL(datasourceUrl)
