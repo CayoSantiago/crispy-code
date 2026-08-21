@@ -64,7 +64,7 @@ pnpm db:ping
 
 ## Production database (Neon + Netlify)
 
-Production uses Neon Postgres. Netlify runs `prisma migrate deploy` before each production build, and each Deploy Preview gets a copy-on-write Neon branch (`preview-pr-<PR number>`) that is migrated independently. Closing the PR deletes that branch via GitHub Actions.
+Production uses Neon Postgres. Netlify runs `prisma migrate deploy` before each production build, and each Deploy Preview gets a copy-on-write Neon branch (`preview-pr-<PR number>`) that is migrated independently. Closing the PR deletes that branch and the Netlify Deploy Preview via GitHub Actions.
 
 Local Docker is unchanged: `pnpm db:up` and `pnpm db:migrate` still use a single `DATABASE_URL`.
 
@@ -91,7 +91,10 @@ Set these environment variables:
 
 Deploy Preview builds still receive the production `DATABASE_URL` so the plugin can read the database name and role. The plugin then overwrites both URLs to the preview branch before migrate and `next build`. Preview databases are snapshots of production data, including users.
 
-Add `NEON_API_KEY` and `NEON_PROJECT_ID` as GitHub Actions secrets so `.github/workflows/neon-preview-cleanup.yml` can delete `preview-pr-<N>` when a PR closes. Leftover branches count against Neon's branch limit.
+Add these GitHub Actions secrets so `.github/workflows/neon-preview-cleanup.yml` can clean up when a PR closes:
+
+- `NEON_API_KEY` and `NEON_PROJECT_ID` — delete Neon branch `preview-pr-<N>`. Leftover branches count against Neon's branch limit.
+- `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` — delete every Deploy Preview for that PR so `deploy-preview-<N>` 404s. `NETLIFY_SITE_ID` is the site API ID under **Site configuration → General → Site details**. Create `NETLIFY_AUTH_TOKEN` as a Netlify personal access token that can list and delete deploys.
 
 For preview sign-in, add each Deploy Preview callback URL in the GitHub and Google OAuth consoles (`{DEPLOY_PRIME_URL}/api/auth/callback/github` and `{DEPLOY_PRIME_URL}/api/auth/callback/google`). The build plugin sets `BETTER_AUTH_URL` to `DEPLOY_PRIME_URL` on non-production deploys.
 
