@@ -1,21 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": ["DATABASE_URL"],
   "tasks": {
-    "generate": {
-      "cache": false
-    },
     "build": {
-      "dependsOn": ["generate", "^generate", "^build"],
+      "dependsOn": ["^build", "^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
-    "check-types": {
-      "dependsOn": ["generate", "^generate", "^check-types"]
-    },
+
     "dev": {
+      "dependsOn": ["^db:generate"],
       "cache": false,
       "persistent": true
+    },
+
+    "check-types": {
+      "dependsOn": ["^check-types"]
+    },
+
+    "db:generate": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["generated/prisma/**"]
     }
   }
 }
