@@ -1,46 +1,22 @@
-import { prismaAdapter } from '@better-auth/prisma-adapter'
-import type { PrismaClient } from '@repo/db/client'
-import { betterAuth } from 'better-auth'
+import { env } from '@repo/env/server'
 
-function optionalEnv(name: string) {
-  const value = process.env[name]?.trim()
-  return value?.length ? value : undefined
-}
-
-function socialProviders() {
-  const githubClientId = optionalEnv('GITHUB_CLIENT_ID')
-  const githubClientSecret = optionalEnv('GITHUB_CLIENT_SECRET')
-  const googleClientId = optionalEnv('GOOGLE_CLIENT_ID')
-  const googleClientSecret = optionalEnv('GOOGLE_CLIENT_SECRET')
-
+export function socialProviders() {
   return {
-    ...(githubClientId && githubClientSecret
+    ...(env.GITHUB_CLIENT_ID && env.GITHUB_CLIENT_SECRET
       ? {
           github: {
-            clientId: githubClientId,
-            clientSecret: githubClientSecret,
+            clientId: env.GITHUB_CLIENT_ID,
+            clientSecret: env.GITHUB_CLIENT_SECRET,
           },
         }
       : {}),
-    ...(googleClientId && googleClientSecret
+    ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
       ? {
           google: {
-            clientId: googleClientId,
-            clientSecret: googleClientSecret,
+            clientId: env.GOOGLE_CLIENT_ID,
+            clientSecret: env.GOOGLE_CLIENT_SECRET,
           },
         }
       : {}),
   }
-}
-
-export function createAuth(prisma: PrismaClient) {
-  return betterAuth({
-    database: prismaAdapter(prisma, {
-      provider: 'postgresql',
-    }),
-    emailAndPassword: {
-      enabled: true,
-    },
-    socialProviders: socialProviders(),
-  })
 }

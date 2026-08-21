@@ -15,11 +15,10 @@ catalog:
   "@tailwindcss/postcss": ^4
 
   "@turbo/gen": ^2.9.15
-  "@types/node": ^20
+  "@types/node": ^20.19.43
   "@types/react": ^19
   "@types/react-dom": ^19
 
-  auth: ^1.7.1
   better-auth: ^1.7.1
 
   class-variance-authority: ^0.7.1

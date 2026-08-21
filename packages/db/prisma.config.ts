@@ -4,7 +4,7 @@ import { defineConfig, env } from 'prisma/config'
 
 config({
   path: [
-    resolve(import.meta.dirname, '../../.env'),
+    resolve(import.meta.dirname, './.env.local'),
     resolve(import.meta.dirname, '../../.env.example'),
   ],
 })
