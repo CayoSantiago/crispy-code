@@ -7,7 +7,13 @@
     "dev": "turbo dev",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
-    "check-types": "turbo check-types"
+    "check-types": "turbo check-types",
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:migrate": "pnpm --filter @repo/db migrate",
+    "db:generate": "pnpm --filter @repo/db generate",
+    "db:studio": "pnpm --filter @repo/db studio",
+    "db:ping": "pnpm --filter @repo/db ping"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.5",

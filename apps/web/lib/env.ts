@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const optionalToken = z
+const optionalString = z
   .string()
   .optional()
   .transform((value) => {
@@ -9,9 +9,11 @@ const optionalToken = z
   })
 
 const envSchema = z.object({
-  GITHUB_TOKEN: optionalToken,
+  DATABASE_URL: optionalString,
+  GITHUB_TOKEN: optionalString,
 })
 
 export const env = envSchema.parse({
+  DATABASE_URL: process.env.DATABASE_URL,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
 })

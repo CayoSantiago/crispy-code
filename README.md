@@ -36,6 +36,30 @@ GITHUB_TOKEN=ghp_your_token_here
 
 The token is optional; the feature works without it.
 
+## Local database
+
+Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@repo/db`). The schema has no app models yet; Find config still lives in `~/.crispy-code/config.json`.
+
+```bash
+cp .env.example .env
+```
+
+Copy the same `DATABASE_URL` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` in that file too.
+
+```bash
+pnpm db:up
+pnpm db:migrate
+pnpm db:ping
+```
+
+- `pnpm db:up` starts Postgres and waits until it is healthy (`localhost:5432`).
+- `pnpm db:migrate` applies Prisma migrations.
+- `pnpm db:ping` runs `SELECT 1` to confirm connectivity.
+- `pnpm db:studio` opens Prisma Studio.
+- `pnpm db:down` stops the container (the data volume is kept).
+
+`pnpm dev` does not start Docker. The app still runs without `DATABASE_URL` until something imports `@repo/db`.
+
 ## Code Finder
 
 Visit `/find` to search code snippets across:
