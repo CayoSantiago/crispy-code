@@ -6,7 +6,7 @@ import Image from 'next/image'
 import img from '@/assets/crispy-sites-hero.png'
 import { Browser } from '@/components/browser'
 import { ComponentPreview } from '@/components/component-preview'
-import { highlighter } from '@/lib/highlight'
+import { highlighter } from '@/lib/highlighter'
 
 const pathName = join(process.cwd(), 'components', 'browser.tsx')
 const code = readFileSync(pathName, 'utf-8')

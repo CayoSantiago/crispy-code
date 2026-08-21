@@ -7,7 +7,7 @@ import {
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import type { Metadata } from 'next'
 import { ComponentPreview } from '@/components/component-preview'
-import { highlighter } from '@/lib/highlight'
+import { highlighter } from '@/lib/highlighter'
 
 const code = `import { cn } from '@repo/ui/lib/utils'
 import { cva, VariantProps } from 'class-variance-authority'

@@ -5,7 +5,7 @@ import { CheckIcon, CopyIcon } from 'lucide-react'
 import type { Metadata } from 'next'
 import { ComponentPreview } from '@/components/component-preview'
 import { CopyButton } from '@/components/copy-button'
-import { highlighter } from '@/lib/highlight'
+import { highlighter } from '@/lib/highlighter'
 
 const pathName = join(process.cwd(), 'components', 'copy-button.tsx')
 const code = readFileSync(pathName, 'utf-8')

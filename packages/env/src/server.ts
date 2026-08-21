@@ -9,11 +9,13 @@ export const env = createEnv({
     BETTER_AUTH_SECRET: z.string().min(1),
     BETTER_AUTH_URL: z.url(),
 
-    GITHUB_CLIENT_ID: z.string().optional(),
-    GITHUB_CLIENT_SECRET: z.string().optional(),
+    GOOGLE_CLIENT_ID: z.optional(z.string().min(1)),
+    GOOGLE_CLIENT_SECRET: z.optional(z.string().min(1)),
 
-    GOOGLE_CLIENT_ID: z.string().optional(),
-    GOOGLE_CLIENT_SECRET: z.string().optional(),
+    GITHUB_CLIENT_ID: z.optional(z.string().min(1)),
+    GITHUB_CLIENT_SECRET: z.optional(z.string().min(1)),
+
+    GITHUB_TOKEN: z.optional(z.string().min(1)),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

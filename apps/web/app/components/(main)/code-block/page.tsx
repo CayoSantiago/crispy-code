@@ -4,7 +4,7 @@ import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import type { Metadata } from 'next'
 import { CodeBlock } from '@/components/code-block'
 import { ComponentPreview } from '@/components/component-preview'
-import { highlighter } from '@/lib/highlight'
+import { highlighter } from '@/lib/highlighter'
 
 const pathName = join(process.cwd(), 'components', 'code-block.tsx')
 const code = readFileSync(pathName, 'utf-8')

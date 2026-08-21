@@ -8,7 +8,7 @@ import {
   SearchQueryTabsList,
   SearchQueryTabsTrigger,
 } from '@/components/search-query-tabs'
-import { highlighter } from '@/lib/highlight'
+import { highlighter } from '@/lib/highlighter'
 
 const pathName = join(process.cwd(), 'components', 'search-query-tabs.tsx')
 const code = readFileSync(pathName, 'utf-8')

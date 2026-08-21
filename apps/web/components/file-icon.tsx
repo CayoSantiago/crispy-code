@@ -26,8 +26,8 @@ import {
   TypescriptIcon,
 } from '@dev.icons/react'
 import { Badge } from '@repo/ui/components/badge'
-import { languageForFilename } from '@/features/diff/language-for-filename'
 import { getFilenameFromPath } from '@/lib/file'
+import { languageForFilename } from '@/lib/highlighter/helpers'
 
 const LANG_ICON: Record<string, Icon> = {
   jsx: _React,

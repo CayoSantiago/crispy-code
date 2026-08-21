@@ -1,6 +1,6 @@
+import { env } from '@repo/env/server'
 import type { z } from 'zod'
-import { env } from '@/lib/env'
-import { formatIssues } from '@/lib/validation'
+import { formatIssues } from '@/lib/schemas/helpers'
 
 export type GitHubResult<T> =
   | { status: 'error'; message: string }

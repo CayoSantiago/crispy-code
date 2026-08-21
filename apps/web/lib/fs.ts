@@ -11,7 +11,7 @@ import {
 import os from 'node:os'
 import path from 'node:path'
 import type z from 'zod'
-import { formatIssues } from '@/lib/validation'
+import { formatIssues } from '@/lib/schemas/helpers'
 
 export async function pathExists(inputPath: string): Promise<boolean> {
   try {

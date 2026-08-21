@@ -1,14 +1,5 @@
 export function getFilenameFromPath(filePath: string) {
-  return filePath.split('/').pop()?.toLowerCase().trim() ?? ''
-}
-
-export function getFileExtension(filename: string) {
-  const idx = filename.lastIndexOf('.')
-  if (idx === -1) return ''
-  return filename
-    .slice(idx + 1)
-    .toLowerCase()
-    .trim()
+  return filePath.split('/').at(-1)?.toLowerCase().trim() ?? ''
 }
 
 export function getFilePathParts(filePath: string) {
