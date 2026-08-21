@@ -1,5 +1,3 @@
-import { env as envNext } from '@repo/env/next'
-import { env as envServer } from '@repo/env/server'
 import { Button } from '@repo/ui/components/button'
 import {
   Item,
@@ -17,9 +15,6 @@ export const metadata = {
   title: 'Components',
   description: 'List of custom made components.',
 } satisfies Metadata
-
-console.log('\n\n\nnext:', envNext, '\n\n\n')
-console.log('\n\n\nserver:', envServer, '\n\n\n')
 
 export default function ComponentsPage() {
   return (
