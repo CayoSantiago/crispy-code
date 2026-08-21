@@ -76,4 +76,10 @@ export const COMPONENTS_NAV: Array<{
     desc: 'Inputs synced to browser search params with no flash on initial render.',
     href: '/search-query-inputs',
   },
+  {
+    id: 'search-query-tabs',
+    title: 'Search Query Tabs',
+    desc: 'Tabs synced to browser search params with no flash on initial render.',
+    href: '/search-query-tabs',
+  },
 ]

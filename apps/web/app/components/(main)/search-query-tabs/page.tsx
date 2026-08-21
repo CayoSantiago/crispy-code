@@ -1,0 +1,132 @@
+import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import type { Metadata } from 'next'
+import { ComponentPreview } from '@/components/component-preview'
+import {
+  SearchQueryTabs,
+  SearchQueryTabsList,
+  SearchQueryTabsTrigger,
+} from '@/components/search-query-tabs'
+import { highlighter } from '@/lib/highlight'
+
+const code = `'use client'
+
+import { Tabs, TabsList, TabsTrigger } from '@repo/ui/components/tabs'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useLayoutEffect,
+  useState,
+} from 'react'
+import { InlineScript } from '@/components/inline-script'
+import { useSetSearchQuery } from '@/hooks/use-set-search-query'
+
+const SearchContext = createContext({ queryKey: '' })
+
+export function SearchQueryTabs({
+  queryKey,
+  defaultValue,
+  clearOnDefault = true,
+  children,
+  ...props
+}: Omit<
+  React.ComponentProps<typeof Tabs>,
+  'value' | 'onValueChange' | 'defaultValue'
+> & {
+  queryKey: string
+  defaultValue?: string
+  clearOnDefault?: boolean
+}) {
+  const _defaultValue = defaultValue ?? ''
+
+  const [tab, setTab] = useState(() => {
+    if (typeof window === 'undefined') return _defaultValue
+    const search = new URLSearchParams(location.search)
+    return decodeURIComponent(search.get(queryKey) ?? _defaultValue)
+  })
+
+  const setSearch = useSetSearchQuery(queryKey)
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: setSearch is already momoized
+  const handleValueChange = useCallback((val: string) => {
+    setSearch(clearOnDefault && val === _defaultValue ? null : val)
+    setTab(val)
+  }, [])
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: update stale state from activity component on page nav
+  useLayoutEffect(() => {
+    if (typeof window !== 'undefined') {
+      const search = new URLSearchParams(location.search)
+      setTab(decodeURIComponent(search.get(queryKey) ?? _defaultValue))
+    }
+  }, [])
+
+  return (
+    <>
+      <Tabs value={tab} onValueChange={handleValueChange} {...props}>
+        <SearchContext.Provider value={{ queryKey }}>
+          {children}
+        </SearchContext.Provider>
+      </Tabs>
+
+      <InlineScript
+        html={\`{var s=new URLSearchParams(location.search);var v=decodeURIComponent(s.get('\${queryKey}')??'\${_defaultValue}');var e=document.getElementById('tab-query-tabs');var b=e.querySelectorAll(':scope>button');b.forEach(function (b){b.setAttribute('aria-selected','false');b.removeAttribute('data-active');b.removeAttribute('data-composite-item-active')});var a=document.getElementById(\\\`\${queryKey}-query-tabs-trigger-\\\${v}\\\`);if(a){a.setAttribute('aria-selected','true');a.setAttribute('data-active','');a.setAttribute('data-composite-item-active','')}}\`}
+      />
+    </>
+  )
+}
+
+export function SearchQueryTabsList(
+  props: React.ComponentProps<typeof TabsList>,
+) {
+  const { queryKey } = useContext(SearchContext)
+
+  return <TabsList id={\`\${queryKey}-query-tabs\`} {...props} />
+}
+
+export function SearchQueryTabsTrigger(
+  props: React.ComponentProps<typeof TabsTrigger>,
+) {
+  const { queryKey } = useContext(SearchContext)
+
+  return (
+    <TabsTrigger
+      id={\`\${queryKey}-query-tabs-trigger-\${props.value}\`}
+      {...props}
+    />
+  )
+}`
+
+const props = createHighlightedCodeBlockProps({
+  highlighter,
+  code,
+  lang: 'tsx',
+  lineNumbers: true,
+})
+
+export const metadata = {
+  title: 'Search Query Tabs',
+  description:
+    'Tabs synced to browser search params with no flash on initial render.',
+} satisfies Metadata
+
+export default function ComponentsSearchQueryTabsPage() {
+  return (
+    <ComponentPreview
+      id='search-query-tabs'
+      header={metadata.title}
+      desc={metadata.description}
+      {...props}
+    >
+      <SearchQueryTabs queryKey='tab' defaultValue='overview'>
+        <SearchQueryTabsList>
+          {['Overview', 'Analytics', 'Reports', 'Settings'].map((item) => (
+            <SearchQueryTabsTrigger key={item} value={item.toLowerCase()}>
+              {item}
+            </SearchQueryTabsTrigger>
+          ))}
+        </SearchQueryTabsList>
+      </SearchQueryTabs>
+    </ComponentPreview>
+  )
+}
