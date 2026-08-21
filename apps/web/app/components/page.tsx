@@ -18,7 +18,7 @@ export const metadata = {
 
 export default function ComponentsPage() {
   return (
-    <main className='min-h-svh w-full p-6 pt-20'>
+    <main className='min-h-svh w-full p-6 pt-20 bg-red-200'>
       <div className='grid grid-cols-1 w-full max-w-lg mx-auto gap-8'>
         <div className='flex items-center gap-2'>
           <Button
