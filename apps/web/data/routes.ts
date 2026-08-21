@@ -82,4 +82,10 @@ export const COMPONENTS_NAV: Array<{
     desc: 'Tabs synced to browser search params with no flash on initial render.',
     href: '/search-query-tabs',
   },
+  {
+    id: 'local-date-time',
+    title: 'Local Date-Time',
+    desc: "Display date-time in user's local timezone with no flash on initial render",
+    href: '/local-date-time',
+  },
 ]
