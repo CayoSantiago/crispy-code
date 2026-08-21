@@ -1,0 +1,7 @@
+{
+  "name": "netlify-plugin-neon-db",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "index.mjs"
+}

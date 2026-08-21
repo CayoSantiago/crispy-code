@@ -5,4 +5,4 @@
   NODE_VERSION = "20"
 
 [[plugins]]
-  package = "./netlify/plugins/neon-db"
+  package = "/netlify/plugins/neon-db"
