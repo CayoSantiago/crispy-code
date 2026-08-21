@@ -1,8 +1,8 @@
 import 'server-only'
 
-import { getDb } from '@repo/db'
+import { db } from '@repo/db'
 import { createAuth } from '#config'
 
-export const auth = createAuth(getDb())
+export const auth = createAuth(db)
 
 export type Session = typeof auth.$Infer.Session
