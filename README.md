@@ -44,7 +44,7 @@ Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@rep
 cp .env.example .env
 ```
 
-Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, and `BETTER_AUTH_URL` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` and OAuth client IDs in that file too.
+Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `INNGEST_DEV=1` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` and OAuth client IDs in that file too.
 
 GitHub and Google sign-in stay off until both the client ID and secret for that provider are set. OAuth callback URLs are `{BETTER_AUTH_URL}/api/auth/callback/github` and `{BETTER_AUTH_URL}/api/auth/callback/google`. `GITHUB_TOKEN` is still only for the GitHub REST client; it is not the GitHub OAuth app secret.
 
@@ -60,7 +60,28 @@ pnpm db:ping
 - `pnpm db:studio` opens Prisma Studio.
 - `pnpm db:down` stops the container (the data volume is kept).
 
-`pnpm dev` does not start Docker. The app requires `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. `DATABASE_URL` is required once something imports `@repo/db` or `@repo/auth/server`.
+`pnpm dev` does not start Docker. The app requires `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `RESEND_API_KEY`. `DATABASE_URL` is required once something imports `@repo/db` or `@repo/auth/server`.
+
+## Transactional email (Inngest + Resend)
+
+Auth verification and password-reset mail is queued through Inngest and sent with Resend. Templates live in `packages/email` (`@repo/email`). Inngest failed runs plus Replay are the dead-letter queue; `email_delivery` in Postgres records status and the Resend message id so retries do not double-send.
+
+Local development:
+
+```bash
+pnpm dev
+pnpm dev:inngest
+```
+
+`pnpm dev:inngest` starts the Inngest Dev Server and syncs `http://localhost:3000/api/inngest`. Keep `INNGEST_DEV=1` in `apps/web/.env.local`. The Resend test from-address `onboarding@resend.dev` only delivers to the email on the Resend account.
+
+Preview templates:
+
+```bash
+pnpm --filter @repo/email email:dev
+```
+
+Production (Netlify) also needs `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Enable the Inngest Netlify integration or rely on `netlify-plugin-inngest`, which syncs `/api/inngest` after each deploy. Deploy Previews use Inngest branch environments via `BRANCH`.
 
 ## Production database (Neon + Netlify)
 
@@ -86,7 +107,7 @@ Prisma Migrate cannot run through Neon's pooler.
 
 Set these environment variables:
 
-- **Production:** `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, plus OAuth client IDs/secrets if you use GitHub or Google sign-in
+- **Production:** `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, plus OAuth client IDs/secrets if you use GitHub or Google sign-in
 - **Deploy Previews:** the same values, plus `NEON_API_KEY` and `NEON_PROJECT_ID`
 
 Deploy Preview builds still receive the production `DATABASE_URL` so the plugin can read the database name and role. The plugin then overwrites both URLs to the preview branch before migrate and `next build`. Preview databases are snapshots of production data, including users.

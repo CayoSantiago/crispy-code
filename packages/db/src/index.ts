@@ -25,3 +25,5 @@ const getDb = () => {
 export const db = new Proxy({} as PrismaClient, {
   get: (_, prop) => getDb()[prop as keyof PrismaClient],
 })
+
+export * from '#generated/client'

@@ -2,7 +2,13 @@ import '@repo/env/server'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
-  transpilePackages: ['@repo/auth', '@repo/db', '@repo/ui', '@repo/env'],
+  transpilePackages: [
+    '@repo/auth',
+    '@repo/db',
+    '@repo/email',
+    '@repo/ui',
+    '@repo/env',
+  ],
   typedRoutes: true,
   cacheComponents: true,
   agentRules: false,

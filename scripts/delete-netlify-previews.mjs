@@ -86,10 +86,13 @@ async function deleteDeploy(deployId, token) {
   )
   console.error(first.body)
 
-  const cancel = await request(`/deploys/${encodeURIComponent(deployId)}/cancel`, {
-    token,
-    method: 'POST',
-  })
+  const cancel = await request(
+    `/deploys/${encodeURIComponent(deployId)}/cancel`,
+    {
+      token,
+      method: 'POST',
+    },
+  )
   if (!isOk(cancel.status)) {
     console.error(`Failed to cancel deploy ${deployId} (HTTP ${cancel.status})`)
     console.error(cancel.body)
@@ -131,7 +134,9 @@ async function main() {
     await deleteDeploy(deploy.id, token)
   }
 
-  console.log(`Deleted ${matches.length} Deploy Preview(s) for review ${reviewId}`)
+  console.log(
+    `Deleted ${matches.length} Deploy Preview(s) for review ${reviewId}`,
+  )
 }
 
 main().catch((error) => {

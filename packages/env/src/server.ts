@@ -22,6 +22,15 @@ export const env = createEnv({
     NEON_PROJECT_ID: z.optional(z.string().min(1)),
 
     REVIEW_ID: z.optional(z.string().min(1)),
+
+    RESEND_API_KEY: z.string().min(1),
+    EMAIL_FROM: z
+      .string()
+      .min(1)
+      .default('Crispy Code <onboarding@resend.dev>'),
+
+    INNGEST_EVENT_KEY: z.optional(z.string().min(1)),
+    INNGEST_SIGNING_KEY: z.optional(z.string().min(1)),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

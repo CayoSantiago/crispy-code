@@ -11,6 +11,7 @@
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "db:reset": "prisma migrate reset",
     "db:ping": "tsx src/ping.ts",
     "db:resolve-env": "tsx src/resolve-db-env.ts"
   },
@@ -40,7 +41,11 @@
     }
   },
   "imports": {
-    "#client": "./src/client.ts",
-    "#generated/*": "./generated/prisma/*.ts"
+    "#generated/*": "./generated/prisma/*.ts",
+    "#*": [
+      "./src/*",
+      "./src/*.ts",
+      "./src/*/index.ts"
+    ]
   }
 }

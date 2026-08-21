@@ -1,4 +1,4 @@
-import { createNeonApi, resolveDatabaseEnv } from './neon-preview.ts'
+import { createNeonApi, resolveDatabaseEnv } from '#neon-preview'
 
 const result = await resolveDatabaseEnv({
   context: process.env.CONTEXT,

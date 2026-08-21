@@ -14,7 +14,13 @@
     "REVIEW_ID",
     "DEPLOY_PRIME_URL",
     "NEON_API_KEY",
-    "NEON_PROJECT_ID"
+    "NEON_PROJECT_ID",
+    "BRANCH",
+    "RESEND_API_KEY",
+    "EMAIL_FROM",
+    "INNGEST_EVENT_KEY",
+    "INNGEST_SIGNING_KEY",
+    "INNGEST_DEV"
   ],
   "tasks": {
     "build": {
@@ -23,8 +29,14 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
 
+    "//#inngest:dev": {
+      "cache": false,
+      "persistent": true
+    },
+
     "dev": {
       "dependsOn": ["^db:generate"],
+      "with": ["//#inngest:dev"],
       "cache": false,
       "persistent": true
     },

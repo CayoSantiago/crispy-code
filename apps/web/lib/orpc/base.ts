@@ -1,5 +1,5 @@
 import { os } from '@orpc/server'
-import { z } from 'zod'
+import { z } from 'zod/v4'
 import type { OrpcContext } from '@/lib/orpc/context'
 
 export const base = os
@@ -10,7 +10,7 @@ export const base = os
     NOT_FOUND: {},
     RATE_LIMITED: {
       data: z.object({
-        resetAt: z.string().nullable(),
+        resetAt: z.nullable(z.string()),
       }),
     },
     INTERNAL_SERVER_ERROR: {},

@@ -10,6 +10,7 @@
   "dependencies": {
     "@better-auth/prisma-adapter": "catalog:",
     "@repo/db": "workspace:*",
+    "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
     "better-auth": "catalog:",
     "react": "catalog:",

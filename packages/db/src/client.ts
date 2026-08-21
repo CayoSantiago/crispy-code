@@ -8,5 +8,3 @@ export const createDBClient = () => {
     adapter: new PrismaPg({ connectionString: env.DATABASE_URL }),
   })
 }
-
-export * from '#generated/client'

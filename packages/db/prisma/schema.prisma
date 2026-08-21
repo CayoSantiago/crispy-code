@@ -1,7 +1,7 @@
 generator client {
-  provider             = "prisma-client"
-  output               = "../generated/prisma"
-  importFileExtension  = "ts"
+  provider            = "prisma-client"
+  output              = "../generated/prisma"
+  importFileExtension = "ts"
 }
 
 datasource db {
@@ -71,4 +71,28 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model EmailDelivery {
+  id                String              @id @default(cuid())
+  idempotencyKey    String              @unique
+  type              String
+  to                String
+  status            EmailDeliveryStatus
+  providerMessageId String?
+  lastError         String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  @@index([to])
+  @@index([status])
+  @@map("email_delivery")
+}
+
+enum EmailDeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+
+  @@map("email_delivery_status")
 }
