@@ -1,17 +1,6 @@
 import { Button, Heading, Text } from 'react-email'
 import { EmailLayout } from '#templates/layout'
-
-const button = {
-  backgroundColor: '#18181b',
-  borderRadius: '6px',
-  color: '#fafafa',
-  display: 'inline-block',
-  fontSize: '14px',
-  fontWeight: '600',
-  lineHeight: '100%',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
+import { bodyText, button, mutedText } from '#templates/styles'
 
 export type PasswordResetEmailProps = {
   name: string
@@ -24,14 +13,18 @@ export function PasswordResetEmail({ name, url }: PasswordResetEmailProps) {
       <Heading as='h1' style={{ fontSize: '20px', margin: '0 0 16px' }}>
         Reset your password
       </Heading>
-      <Text style={{ color: '#3f3f46', fontSize: '14px', lineHeight: '22px' }}>
+      <Text style={bodyText}>
         Hi {name}, we received a request to reset your Crispy Code password.
         Click the button below to choose a new one.
       </Text>
       <Button href={url} style={button}>
         Reset password
       </Button>
-      <Text style={{ color: '#71717a', fontSize: '12px', lineHeight: '20px' }}>
+      <Text style={mutedText}>
+        If the button does not work, paste this URL into your browser:
+        {url}
+      </Text>
+      <Text style={mutedText}>
         If you did not request this, you can ignore this email. This link will
         expire.
       </Text>

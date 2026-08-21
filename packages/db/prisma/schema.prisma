@@ -86,6 +86,7 @@ model EmailDelivery {
 
   @@index([to])
   @@index([status])
+  @@index([status, createdAt])
   @@map("email_delivery")
 }
 
@@ -95,4 +96,14 @@ enum EmailDeliveryStatus {
   FAILED
 
   @@map("email_delivery_status")
+}
+
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rate_limit")
 }

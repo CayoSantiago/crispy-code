@@ -3,23 +3,21 @@ import 'server-only'
 import { env } from '@repo/env/server'
 import { render } from 'react-email'
 import { Resend } from 'resend'
-import { getDelivery } from '#delivery'
+import { getDelivery, markSent } from '#delivery'
+import { isAlreadySent } from '#delivery-state'
 import { throwForResendError } from '#errors'
-import { type EmailSendPayload, emailSubjects } from '#schema'
-import { EmailVerificationEmail } from '#templates/email-verification'
-import { PasswordResetEmail } from '#templates/password-reset'
+import { type EmailLogger, logEmail } from '#log'
+import type { EmailSendPayload } from '#schema'
+import { isEmailSendingEnabled } from '#sending-enabled'
+import { emailSubjects, renderEmailTemplate } from '#templates/registry'
 
 const resend = new Resend(env.RESEND_API_KEY)
 
 async function renderEmail(payload: EmailSendPayload) {
-  const element =
-    payload.type === 'password-reset'
-      ? PasswordResetEmail(payload.props)
-      : EmailVerificationEmail(payload.props)
-
+  const element = renderEmailTemplate(payload)
   const [html, text] = await Promise.all([
-    render(element),
-    render(element, { plainText: true }),
+    render(element, { pretty: false }),
+    render(element, { plainText: true, pretty: false }),
   ])
 
   return {
@@ -29,9 +27,33 @@ async function renderEmail(payload: EmailSendPayload) {
   }
 }
 
-export async function sendEmail(payload: EmailSendPayload) {
+export async function sendEmail(
+  payload: EmailSendPayload,
+  logger: EmailLogger = console,
+) {
+  const fields = {
+    type: payload.type,
+    to: payload.to,
+    idempotencyKey: payload.idempotencyKey,
+  }
+
+  if (!isEmailSendingEnabled(env.CONTEXT)) {
+    logEmail(logger, 'info', 'email.send.skipped', {
+      ...fields,
+      skipped: true,
+      reason: 'preview',
+    })
+    return { providerMessageId: undefined, skipped: true }
+  }
+
   const existing = await getDelivery(payload.idempotencyKey)
-  if (existing?.status === 'SENT' && existing.providerMessageId) {
+  if (isAlreadySent(existing) && existing?.providerMessageId) {
+    logEmail(logger, 'info', 'email.send.skipped', {
+      ...fields,
+      skipped: true,
+      reason: 'already-sent',
+      providerMessageId: existing.providerMessageId,
+    })
     return { providerMessageId: existing.providerMessageId, skipped: true }
   }
 
@@ -50,5 +72,10 @@ export async function sendEmail(payload: EmailSendPayload) {
   if (error) throwForResendError(error)
   if (!data?.id) throw new Error('Resend did not return a message id')
 
+  await markSent(payload.idempotencyKey, data.id)
+  logEmail(logger, 'info', 'email.send.sent', {
+    ...fields,
+    providerMessageId: data.id,
+  })
   return { providerMessageId: data.id, skipped: false }
 }

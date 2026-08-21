@@ -5,7 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "inngest:dev": "pnpm dlx inngest-cli@latest dev",
+    "inngest:dev": "inngest-cli dev -u http://localhost:3000/api/inngest",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "check-types": "turbo run check-types",
@@ -24,6 +24,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
     "@repo/typescript-config": "workspace:*",
+    "inngest-cli": "^1.43.0",
     "netlify-plugin-inngest": "^1.0.1",
     "turbo": "^2.9.18",
     "typescript": "catalog:"

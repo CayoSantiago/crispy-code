@@ -41,6 +41,16 @@ export const auth = betterAuth({
   },
 
   socialProviders: socialProviders(),
+
+  rateLimit: {
+    storage: 'database',
+  },
+
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ['x-nf-client-connection-ip', 'x-forwarded-for'],
+    },
+  },
 })
 
 export type Session = typeof auth.$Infer.Session

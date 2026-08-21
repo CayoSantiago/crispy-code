@@ -2,6 +2,8 @@ import { createEnv } from '@t3-oss/env-core'
 import { netlify } from '@t3-oss/env-core/presets-zod'
 import { z } from 'zod/v4'
 
+const isNetlifyProduction = process.env.CONTEXT === 'production'
+
 export const env = createEnv({
   server: {
     DATABASE_URL: z.url(),
@@ -24,13 +26,23 @@ export const env = createEnv({
     REVIEW_ID: z.optional(z.string().min(1)),
 
     RESEND_API_KEY: z.string().min(1),
-    EMAIL_FROM: z
-      .string()
-      .min(1)
-      .default('Crispy Code <onboarding@resend.dev>'),
+    EMAIL_FROM: isNetlifyProduction
+      ? z.string().min(1)
+      : z.string().min(1).default('Crispy Code <onboarding@resend.dev>'),
 
-    INNGEST_EVENT_KEY: z.optional(z.string().min(1)),
-    INNGEST_SIGNING_KEY: z.optional(z.string().min(1)),
+    INNGEST_EVENT_KEY: isNetlifyProduction
+      ? z.string().min(1)
+      : z.optional(z.string().min(1)),
+    INNGEST_SIGNING_KEY: isNetlifyProduction
+      ? z.string().min(1)
+      : z.optional(z.string().min(1)),
+    INNGEST_DEV: z
+      .enum(['0', '1'])
+      .optional()
+      .refine(
+        (value) => !(isNetlifyProduction && value === '1'),
+        'INNGEST_DEV must not be enabled in production',
+      ),
   },
   runtimeEnv: process.env,
   emptyStringAsUndefined: true,

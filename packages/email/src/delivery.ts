@@ -30,12 +30,17 @@ export async function markSent(
   })
 }
 
+const MAX_ERROR_LENGTH = 500
+
 export async function markFailed(
   idempotencyKey: string,
   lastError: string,
 ): Promise<void> {
   await db.emailDelivery.updateMany({
     where: { idempotencyKey, status: { not: 'SENT' } },
-    data: { status: 'FAILED', lastError },
+    data: {
+      status: 'FAILED',
+      lastError: lastError.slice(0, MAX_ERROR_LENGTH),
+    },
   })
 }

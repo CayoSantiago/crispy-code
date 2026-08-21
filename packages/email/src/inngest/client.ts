@@ -1,5 +1,6 @@
 import 'server-only'
 
+import { env } from '@repo/env/server'
 import { eventType, Inngest } from 'inngest'
 import { emailSendPayloadSchema } from '#schema'
 
@@ -9,9 +10,6 @@ export const emailSend = eventType('email/send', {
 
 export const inngest = new Inngest({
   id: 'crispy-code',
-  env:
-    process.env.CONTEXT && process.env.CONTEXT !== 'production'
-      ? process.env.BRANCH
-      : undefined,
+  env: env.CONTEXT && env.CONTEXT !== 'production' ? env.BRANCH : undefined,
   checkpointing: { maxRuntime: '8s' },
 })

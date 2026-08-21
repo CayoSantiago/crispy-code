@@ -1,8 +1,6 @@
-import { NonRetriableError } from 'inngest'
+import { NonRetriableError, RetryAfterError } from 'inngest'
 
 const retryableResendErrors = new Set([
-  'rate_limit_exceeded',
-  'concurrent_idempotent_requests',
   'application_error',
   'internal_server_error',
   'api_error',
@@ -13,6 +11,14 @@ export function throwForResendError(error: {
   message: string
 }): never {
   const message = `${error.name}: ${error.message}`
+
+  if (error.name === 'rate_limit_exceeded') {
+    throw new RetryAfterError(message, '60s')
+  }
+
+  if (error.name === 'concurrent_idempotent_requests') {
+    throw new RetryAfterError(message, '5s')
+  }
 
   if (retryableResendErrors.has(error.name)) {
     throw new Error(message)

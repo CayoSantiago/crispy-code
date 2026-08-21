@@ -70,10 +70,9 @@ Local development:
 
 ```bash
 pnpm dev
-pnpm dev:inngest
 ```
 
-`pnpm dev:inngest` starts the Inngest Dev Server and syncs `http://localhost:3000/api/inngest`. Keep `INNGEST_DEV=1` in `apps/web/.env.local`. The Resend test from-address `onboarding@resend.dev` only delivers to the email on the Resend account.
+`pnpm dev` starts Next and the Inngest Dev Server together. Do not start a second CLI. If you need the Dev Server alone, run `pnpm inngest:dev`. Keep `INNGEST_DEV=1` in `apps/web/.env.local` only. The Resend test from-address `onboarding@resend.dev` only delivers to the email on the Resend account.
 
 Preview templates:
 
@@ -110,7 +109,7 @@ Set these environment variables:
 - **Production:** `DATABASE_URL`, `DATABASE_URL_UNPOOLED`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `NEXT_PUBLIC_SITE_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, `INNGEST_SIGNING_KEY`, plus OAuth client IDs/secrets if you use GitHub or Google sign-in
 - **Deploy Previews:** the same values, plus `NEON_API_KEY` and `NEON_PROJECT_ID`
 
-Deploy Preview builds still receive the production `DATABASE_URL` so the plugin can read the database name and role. The plugin then overwrites both URLs to the preview branch before migrate and `next build`. Preview databases are snapshots of production data, including users.
+Deploy Preview builds still receive the production `DATABASE_URL` so the plugin can read the database name and role. The plugin then overwrites both URLs to the preview branch before migrate and `next build`. Preview databases are snapshots of production data, including users. Preview and branch deploys do not send Resend mail, so those snapshots cannot email production users.
 
 Add these GitHub Actions secrets so `.github/workflows/neon-preview-cleanup.yml` can clean up when a PR closes:
 
