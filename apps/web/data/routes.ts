@@ -27,6 +27,12 @@ export const ROOT_NAV: Array<{
     href: '/components',
   },
   {
+    id: 'blocks',
+    title: 'Blocks',
+    desc: 'Collection of commonly used blocks.',
+    href: '/blocks',
+  },
+  {
     id: 'git',
     title: 'Git',
     desc: 'Connect a public GitHub repository and read its commit diffs.',
@@ -87,5 +93,31 @@ export const COMPONENTS_NAV: Array<{
     title: 'Local Date-Time',
     desc: "Display date-time in user's local timezone with no flash on initial render",
     href: '/local-date-time',
+  },
+]
+
+export const BLOCKS_NAV: Array<{
+  id: string
+  title: string
+  desc: string
+  href: SubRoute<'/blocks'>
+}> = [
+  {
+    id: 'login-form',
+    title: 'Login Form',
+    desc: 'Simple login form with OAuth options.',
+    href: '/login-form',
+  },
+  {
+    id: 'signup-form',
+    title: 'Sign Up Form',
+    desc: 'Simple signup form with OAuth options.',
+    href: '/signup-form',
+  },
+  {
+    id: 'forgot-password-form',
+    title: 'Forgot Password Form',
+    desc: 'Simple forgot password form.',
+    href: '/forgot-password-form',
   },
 ]

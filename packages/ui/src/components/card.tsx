@@ -16,6 +16,7 @@ const cardVaraints = cva(
           'relative before:absolute before:inset-0 before:rounded-[inherit] before:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] before:animate-[rotation_4s_linear_infinite] before:-z-10 after:absolute after:inset-0 after:rounded-[inherit] after:bg-[conic-gradient(from_var(--gradient-angle),var(--color-red-400),var(--color-blue-400),var(--color-red-400))] after:animate-[rotation_4s_linear_infinite] after:-z-10 after:blur-sm',
       },
       size: {
+        lg: '[--card-spacing:--spacing(6)]',
         default: '[--card-spacing:--spacing(4)]',
         sm: '[--card-spacing:--spacing(3)]',
       },
