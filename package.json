@@ -10,6 +10,7 @@
     "lint:fix": "biome check . --write",
     "check-types": "turbo run check-types",
     "db:generate": "turbo run db:generate",
+    "db:dev": "docker compose up",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "pnpm --filter @repo/db db:migrate",
