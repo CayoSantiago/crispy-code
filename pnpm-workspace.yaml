@@ -16,6 +16,8 @@ catalog:
   "@better-auth/prisma-adapter": ^1.7.1
   "@tailwindcss/postcss": ^4
 
+  "@tanstack/react-form": ^1.33.5
+
   "@turbo/gen": ^2.9.15
   "@types/node": ^24
   "@types/react": ^19

@@ -1,13 +1,15 @@
-import { Geist_Mono, Inter } from 'next/font/google'
-
 import '@repo/ui/globals.css'
+import '@/lib/orpc/client.server'
+
+import { env } from '@repo/env/next'
+import { TooltipProvider } from '@repo/ui/components/tooltip'
 import { cn } from '@repo/ui/lib/utils'
+import type { Metadata } from 'next'
+import { Geist_Mono, Inter } from 'next/font/google'
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
 import { HighligherStyles } from '@/lib/highlighter/theme'
-import '@/lib/orpc/client.server'
-import { TooltipProvider } from '@repo/ui/components/tooltip'
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -15,6 +17,14 @@ const fontMono = Geist_Mono({
   subsets: ['latin'],
   variable: '--font-mono',
 })
+
+export const metadata: Metadata = {
+  title: {
+    template: '%s | Crispy Code',
+    default: 'Crispy Code',
+  },
+  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
+}
 
 export default function RootLayout({
   children,

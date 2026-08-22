@@ -8,18 +8,18 @@ import {
   SearchIcon,
 } from 'lucide-react'
 import { Suspense } from 'react'
-import { ConfigErrorMessage } from '@/components/find/config-error-message'
-import { FindAutoSync } from '@/components/find/find-auto-sync'
-import { SearchResults } from '@/components/find/search-results'
-import {
-  SourcesSheet,
-  ToggleSourcesSheetButton,
-} from '@/components/find/sources-sheet'
 import {
   SearchQueryInput,
   SearchQueryToggle,
 } from '@/components/search-query-inputs'
 import { Tooltip } from '@/components/tooltip'
+import { ConfigErrorMessage } from '@/features/find/components/config-error-message'
+import { FindAutoSync } from '@/features/find/components/find-auto-sync'
+import { SearchResults } from '@/features/find/components/search-results'
+import {
+  SourcesSheet,
+  ToggleSourcesSheetButton,
+} from '@/features/find/components/sources-sheet'
 
 export default function FindPage() {
   return (

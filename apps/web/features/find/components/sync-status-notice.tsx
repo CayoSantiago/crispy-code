@@ -5,7 +5,7 @@ import { useMutationState, useQuery } from '@tanstack/react-query'
 import {
   syncGitHubReposMutationKey,
   useIsSyncingGitHubRepos,
-} from '@/components/find/use-sync-github-repos'
+} from '@/features/find/components/use-sync-github-repos'
 import type { SyncGitHubReposInput } from '@/features/find/schemas'
 import { selectReposToSync } from '@/features/find/sync-eligibility'
 import { orpc } from '@/lib/orpc/client'

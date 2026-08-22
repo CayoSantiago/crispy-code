@@ -49,8 +49,11 @@ export const onPreBuild = ({ utils }) => {
   process.env.DATABASE_URL = urls.DATABASE_URL
   process.env.DATABASE_URL_UNPOOLED = urls.DATABASE_URL_UNPOOLED
 
+  process.env.NEXT_PUBLIC_SITE_URL = process.env.URL
+
   if (process.env.CONTEXT !== 'production' && process.env.DEPLOY_PRIME_URL) {
     process.env.BETTER_AUTH_URL = process.env.DEPLOY_PRIME_URL
+    process.env.NEXT_PUBLIC_SITE_URL = process.env.DEPLOY_PRIME_URL
   }
 
   const migrate = spawnSync('pnpm', ['db:deploy'], {

@@ -1,4 +1,4 @@
-import '@repo/env/server'
+import '@repo/env/next'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
     '@repo/auth',
     '@repo/db',
     '@repo/email',
-    '@repo/ui',
     '@repo/env',
+    '@repo/form',
+    '@repo/ui',
   ],
   typedRoutes: true,
   cacheComponents: true,

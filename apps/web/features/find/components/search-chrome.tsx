@@ -1,5 +1,8 @@
 import { CaseSensitiveIcon, RegexIcon } from 'lucide-react'
-import { SearchQueryInput, SearchQueryToggle } from '../search-query-inputs'
+import {
+  SearchQueryInput,
+  SearchQueryToggle,
+} from '@/components/search-query-inputs'
 
 export function SearchChrome() {
   return (

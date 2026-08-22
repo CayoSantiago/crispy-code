@@ -6,6 +6,7 @@ import { enqueueEmail } from '@repo/email/enqueue'
 import { emailIdempotencyKey } from '@repo/email/schemas'
 import { env } from '@repo/env/server'
 import { betterAuth } from 'better-auth'
+import { nextCookies } from 'better-auth/next-js'
 import { socialProviders } from '#config'
 
 export const auth = betterAuth({
@@ -51,6 +52,8 @@ export const auth = betterAuth({
       ipAddressHeaders: ['x-nf-client-connection-ip', 'x-forwarded-for'],
     },
   },
+
+  plugins: [nextCookies()],
 })
 
 export type Session = typeof auth.$Infer.Session

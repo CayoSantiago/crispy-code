@@ -2,7 +2,6 @@
 
 import { Label } from '@repo/ui/components/label'
 import { Separator } from '@repo/ui/components/separator'
-
 import { cn } from '@repo/ui/lib/utils'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { useMemo } from 'react'
@@ -179,7 +178,7 @@ function FieldError({
   errors,
   ...props
 }: React.ComponentProps<'div'> & {
-  errors?: Array<{ message?: string } | undefined>
+  errors?: Array<{ message?: string } | string | undefined>
 }) {
   const content = useMemo(() => {
     if (children) {
@@ -191,20 +190,33 @@ function FieldError({
     }
 
     const uniqueErrors = [
-      ...new Map(errors.map((error) => [error?.message, error])).values(),
+      ...new Map(
+        errors.map((error) => [
+          typeof error === 'string' ? error : error?.message,
+          error,
+        ]),
+      ).values(),
     ]
 
+    console.log('unique', uniqueErrors)
+
     if (uniqueErrors?.length == 1) {
-      return uniqueErrors[0]?.message
+      const error = uniqueErrors[0]
+      if (typeof error === 'string') return error
+      return error?.message
     }
 
     return (
       <ul className='ml-4 flex list-disc flex-col gap-1'>
-        {uniqueErrors.map(
-          (error, index) =>
-            // biome-ignore lint/suspicious/noArrayIndexKey: from shadcn
-            error?.message && <li key={index}>{error.message}</li>,
-        )}
+        {uniqueErrors.map((error, index) => {
+          const errorMessage =
+            typeof error === 'string' ? error : error?.message
+
+          if (!errorMessage) return null
+
+          // biome-ignore lint/suspicious/noArrayIndexKey: from shadcn
+          return <li key={index}>{errorMessage}</li>
+        })}
       </ul>
     )
   }, [children, errors])

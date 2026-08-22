@@ -14,8 +14,8 @@ import {
   TabsTrigger,
 } from '@repo/ui/components/tabs'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { GitHubSourcesPanel } from '@/components/find/github-sources-panel'
-import { SourcesPanel } from '@/components/find/sources-panel'
+import { GitHubSourcesPanel } from '@/features/find/components/github-sources-panel'
+import { SourcesPanel } from '@/features/find/components/sources-panel'
 
 const QUERY_KEY = 'sources'
 

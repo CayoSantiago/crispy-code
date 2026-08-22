@@ -13,6 +13,7 @@
     "@repo/email": "workspace:*",
     "@repo/env": "workspace:*",
     "better-auth": "catalog:",
+    "next": "catalog:",
     "react": "catalog:",
     "server-only": "catalog:"
   },
@@ -23,11 +24,8 @@
     "typescript": "catalog:"
   },
   "exports": {
-    "./server": {
-      "default": "./src/server.ts"
-    },
-    "./client": {
-      "default": "./src/client.ts"
+    "./*": {
+      "default": "./src/*.ts"
     }
   },
   "imports": {

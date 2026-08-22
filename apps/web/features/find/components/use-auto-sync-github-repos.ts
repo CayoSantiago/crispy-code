@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react'
 import {
   useIsSyncingGitHubRepos,
   useSyncGitHubReposMutation,
-} from '@/components/find/use-sync-github-repos'
+} from '@/features/find/components/use-sync-github-repos'
 import { selectReposToSync } from '@/features/find/sync-eligibility'
 import { orpc } from '@/lib/orpc/client'
 

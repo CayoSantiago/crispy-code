@@ -1,6 +1,7 @@
 import { createEnv } from '@t3-oss/env-nextjs'
 import { netlify } from '@t3-oss/env-nextjs/presets-zod'
 import { z } from 'zod/v4'
+import { env as serverEnv } from '#server'
 
 export const env = createEnv({
   client: {
@@ -10,5 +11,5 @@ export const env = createEnv({
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   emptyStringAsUndefined: true,
-  extends: [netlify()],
+  extends: [serverEnv, netlify()],
 })
