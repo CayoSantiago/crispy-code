@@ -1,77 +1,107 @@
 'use client'
 
+import { useAppForm } from '@repo/form'
 import { Button } from '@repo/ui/components/button'
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@repo/ui/components/field'
-import { Input } from '@repo/ui/components/input'
-import Link from 'next/link'
-import { useActionState } from 'react'
-import { resendVerificationEmail } from '@/features/auth/actions'
 import {
-  type AuthFormState,
-  initialAuthFormState,
-} from '@/features/auth/schemas'
+  initialFormState,
+  mergeForm,
+  revalidateLogic,
+  useSelector,
+  useTransform,
+} from '@tanstack/react-form-nextjs'
+import Link from 'next/link'
+import { startTransition, useActionState } from 'react'
+import { resendVerificationEmail } from '@/features/auth/actions'
+import { verifyEmailFormOpts } from '@/features/auth/form-opts'
+import { forgotPasswordSchema } from '@/features/auth/schemas'
 
 export function VerifyEmailForm({
   email,
   showEmailField,
-  initialState = initialAuthFormState,
 }: {
   email?: string
   showEmailField: boolean
-  initialState?: AuthFormState
 }) {
   const [state, formAction, pending] = useActionState(
     resendVerificationEmail,
-    initialState,
+    initialFormState,
   )
-  const emailError = state.fieldErrors?.email
+
+  const form = useAppForm({
+    ...verifyEmailFormOpts,
+    defaultValues: { email: email ?? '' },
+    transform: useTransform(
+      (baseForm) => mergeForm(baseForm, state ?? {}),
+      [state],
+    ),
+    validationLogic: revalidateLogic(),
+    validators: { onDynamic: forgotPasswordSchema },
+    onSubmit: ({ meta }: { meta: FormData }) => {
+      startTransition(() => {
+        formAction(meta)
+      })
+    },
+  })
+
+  const formErrors = useSelector(form.store, (formState) => formState.errors)
+  const success =
+    'success' in state && typeof state.success === 'string'
+      ? state.success
+      : undefined
 
   return (
-    <form action={formAction}>
-      {email && !showEmailField ? (
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget)
+        void form.handleSubmit(formData)
+      }}
+    >
+      {!showEmailField && email ? (
         <input type='hidden' name='email' value={email} />
       ) : null}
       <FieldGroup className='gap-(--card-spacing)'>
         {showEmailField ? (
-          <Field
-            className='gap-[calc(var(--card-spacing)/2)]'
-            data-invalid={emailError ? true : undefined}
-          >
-            <FieldLabel htmlFor='email'>Email</FieldLabel>
-            <Input
-              id='email'
-              name='email'
-              type='email'
-              inputMode='email'
-              autoComplete='email'
-              autoCapitalize='none'
-              autoCorrect='off'
-              spellCheck={false}
-              defaultValue={email}
-              placeholder='m@example.com'
-              autoFocus
-              required
-              aria-invalid={emailError ? true : undefined}
-            />
-            {emailError ? <FieldError>{emailError}</FieldError> : null}
-          </Field>
+          <form.AppField name='email'>
+            {(field) => (
+              <field.Field className='gap-[calc(var(--card-spacing)/2)]'>
+                <field.Label>Email</field.Label>
+                <field.TextField
+                  type='email'
+                  inputMode='email'
+                  autoComplete='email'
+                  autoCapitalize='none'
+                  autoCorrect='off'
+                  spellCheck={false}
+                  placeholder='m@example.com'
+                  autoFocus
+                  required
+                />
+                <field.Errors />
+              </field.Field>
+            )}
+          </form.AppField>
         ) : null}
 
         <Field className='gap-[calc(var(--card-spacing)/2)]'>
-          {state.error ? (
-            <FieldError aria-live='polite'>{state.error}</FieldError>
-          ) : null}
-          {state.success ? (
-            <FieldDescription aria-live='polite'>
-              {state.success}
+          <FieldError errors={formErrors} className='text-center' />
+
+          {success ? (
+            <FieldDescription
+              aria-live='polite'
+              className='text-center text-emerald-600'
+            >
+              {success}
             </FieldDescription>
           ) : null}
+
           <Button type='submit' disabled={pending}>
             {pending ? 'Sending...' : 'Resend verification email'}
           </Button>

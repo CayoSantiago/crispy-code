@@ -32,46 +32,7 @@ export const resetPasswordSchema = z
     path: ['confirmPassword'],
   })
 
-export type AuthFieldErrors = {
-  name?: string
-  email?: string
-  password?: string
-  confirmPassword?: string
-  token?: string
-}
-
-export type AuthFormState = {
-  error?: string
-  success?: string
-  fieldErrors?: AuthFieldErrors
-}
-
-export const initialAuthFormState: AuthFormState = {}
-
 export function formString(formData: FormData, key: string) {
   const value = formData.get(key)
   return typeof value === 'string' ? value : ''
-}
-
-export function firstFieldErrors(
-  fieldErrors: Record<string, string[] | undefined>,
-): AuthFieldErrors {
-  const result: AuthFieldErrors = {}
-
-  for (const [key, messages] of Object.entries(fieldErrors)) {
-    const message = messages?.[0]
-    if (!message) continue
-
-    if (
-      key === 'name' ||
-      key === 'email' ||
-      key === 'password' ||
-      key === 'confirmPassword' ||
-      key === 'token'
-    ) {
-      result[key] = message
-    }
-  }
-
-  return result
 }

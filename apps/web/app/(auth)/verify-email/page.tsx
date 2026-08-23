@@ -18,6 +18,7 @@ async function VerifyEmailContent() {
   return (
     <>
       <VerifyEmailForm email={email} showEmailField={!email} />
+
       {session?.session ? (
         <Button
           variant='outline'

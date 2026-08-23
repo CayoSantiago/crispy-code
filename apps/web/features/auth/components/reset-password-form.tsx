@@ -1,87 +1,102 @@
 'use client'
 
+import { useAppForm } from '@repo/form'
 import { Button } from '@repo/ui/components/button'
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@repo/ui/components/field'
-import { Input } from '@repo/ui/components/input'
-import Link from 'next/link'
-import { useActionState } from 'react'
-import { resetPassword } from '@/features/auth/actions'
 import {
-  type AuthFormState,
-  initialAuthFormState,
-} from '@/features/auth/schemas'
+  initialFormState,
+  mergeForm,
+  revalidateLogic,
+  useSelector,
+  useTransform,
+} from '@tanstack/react-form-nextjs'
+import Link from 'next/link'
+import { startTransition, useActionState } from 'react'
+import { resetPassword } from '@/features/auth/actions'
+import { resetPasswordFormOpts } from '@/features/auth/form-opts'
+import { resetPasswordSchema } from '@/features/auth/schemas'
 
-export function ResetPasswordForm({
-  token,
-  initialState = initialAuthFormState,
-}: {
-  token: string
-  initialState?: AuthFormState
-}) {
+export function ResetPasswordForm({ token }: { token: string }) {
   const [state, formAction, pending] = useActionState(
     resetPassword,
-    initialState,
+    initialFormState,
   )
-  const passwordError = state.fieldErrors?.password
-  const confirmPasswordError = state.fieldErrors?.confirmPassword
+
+  const form = useAppForm({
+    ...resetPasswordFormOpts,
+    defaultValues: { ...resetPasswordFormOpts.defaultValues, token },
+    transform: useTransform(
+      (baseForm) => mergeForm(baseForm, state ?? {}),
+      [state],
+    ),
+    validationLogic: revalidateLogic(),
+    validators: { onDynamic: resetPasswordSchema },
+    onSubmit: ({ meta }: { meta: FormData }) => {
+      startTransition(() => {
+        formAction(meta)
+      })
+    },
+  })
+
+  const formErrors = useSelector(form.store, (formState) => formState.errors)
 
   return (
-    <form action={formAction}>
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget)
+        void form.handleSubmit(formData)
+      }}
+    >
       <input type='hidden' name='token' value={token} />
       <FieldGroup className='gap-(--card-spacing)'>
-        <Field
-          className='gap-[calc(var(--card-spacing)/2)]'
-          data-invalid={passwordError ? true : undefined}
-        >
-          <FieldLabel htmlFor='password'>New password</FieldLabel>
-          <Input
-            id='password'
-            name='password'
-            type='password'
-            autoComplete='new-password'
-            minLength={8}
-            autoFocus
-            required
-            aria-invalid={passwordError ? true : undefined}
-          />
-          <FieldDescription>
-            Must be at least 8 characters long.
-          </FieldDescription>
-          {passwordError ? <FieldError>{passwordError}</FieldError> : null}
-        </Field>
+        <form.AppField name='password'>
+          {(field) => (
+            <field.Field className='gap-[calc(var(--card-spacing)/2)]'>
+              <field.Label>New password</field.Label>
+              <field.TextField
+                type='password'
+                autoComplete='new-password'
+                minLength={8}
+                autoFocus
+                required
+              />
+              <FieldDescription>
+                Must be at least 8 characters long.
+              </FieldDescription>
+              <field.Errors />
+            </field.Field>
+          )}
+        </form.AppField>
 
-        <Field
-          className='gap-[calc(var(--card-spacing)/2)]'
-          data-invalid={confirmPasswordError ? true : undefined}
-        >
-          <FieldLabel htmlFor='confirm-password'>Confirm password</FieldLabel>
-          <Input
-            id='confirm-password'
-            name='confirmPassword'
-            type='password'
-            autoComplete='new-password'
-            minLength={8}
-            required
-            aria-invalid={confirmPasswordError ? true : undefined}
-          />
-          {confirmPasswordError ? (
-            <FieldError>{confirmPasswordError}</FieldError>
-          ) : null}
-        </Field>
+        <form.AppField name='confirmPassword'>
+          {(field) => (
+            <field.Field className='gap-[calc(var(--card-spacing)/2)]'>
+              <field.Label>Confirm password</field.Label>
+              <field.TextField
+                type='password'
+                autoComplete='new-password'
+                minLength={8}
+                required
+              />
+              <field.Errors />
+            </field.Field>
+          )}
+        </form.AppField>
 
         <Field className='gap-[calc(var(--card-spacing)/2)]'>
-          {state.error ? (
-            <FieldError aria-live='polite'>{state.error}</FieldError>
-          ) : null}
+          <FieldError errors={formErrors} className='text-center' />
+
           <Button type='submit' disabled={pending}>
             {pending ? 'Updating...' : 'Reset password'}
           </Button>
+
           <FieldDescription className='text-center'>
             Back to{' '}
             <Link className='hover:text-foreground!' href='/login'>

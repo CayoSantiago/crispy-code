@@ -1,5 +1,4 @@
 import { isAPIError } from 'better-auth/api'
-import type { AuthFormState } from '@/features/auth/schemas'
 
 export const GENERIC_AUTH_ERROR = 'Something went wrong. Try again.'
 export const INVALID_CREDENTIALS_ERROR = 'Invalid email or password'
@@ -87,29 +86,27 @@ export function mapSignupErrorMessage(error: unknown) {
   return GENERIC_AUTH_ERROR
 }
 
-export function mapResetPasswordError(error: unknown): AuthFormState {
+export function mapResetPasswordErrorMessage(error: unknown) {
   if (isRateLimited(error)) {
-    return { error: RATE_LIMIT_ERROR }
+    return RATE_LIMIT_ERROR
   }
 
   const code = authErrorCode(error)
   if (code && INVALID_TOKEN_CODES.has(code)) {
-    return { error: 'This reset link is invalid or has expired.' }
+    return 'This reset link is invalid or has expired.'
   }
 
   if (code === 'PASSWORD_TOO_SHORT') {
-    return {
-      fieldErrors: { password: 'Must be at least 8 characters long.' },
-    }
+    return 'Must be at least 8 characters long.'
   }
 
-  return { error: GENERIC_AUTH_ERROR }
+  return GENERIC_AUTH_ERROR
 }
 
-export function mapVerificationError(error: unknown): AuthFormState {
+export function mapVerificationErrorMessage(error: unknown) {
   if (isRateLimited(error)) {
-    return { error: RATE_LIMIT_ERROR }
+    return RATE_LIMIT_ERROR
   }
 
-  return { error: GENERIC_AUTH_ERROR }
+  return GENERIC_AUTH_ERROR
 }

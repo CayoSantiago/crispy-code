@@ -1,70 +1,99 @@
 'use client'
 
+import { useAppForm } from '@repo/form'
 import { Button } from '@repo/ui/components/button'
 import {
   Field,
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
 } from '@repo/ui/components/field'
-import { Input } from '@repo/ui/components/input'
-import Link from 'next/link'
-import { useActionState } from 'react'
-import { requestPasswordReset } from '@/features/auth/actions'
 import {
-  type AuthFormState,
-  initialAuthFormState,
-} from '@/features/auth/schemas'
+  initialFormState,
+  mergeForm,
+  revalidateLogic,
+  useSelector,
+  useTransform,
+} from '@tanstack/react-form-nextjs'
+import Link from 'next/link'
+import { startTransition, useActionState } from 'react'
+import { requestPasswordReset } from '@/features/auth/actions'
+import { forgotPasswordFormOpts } from '@/features/auth/form-opts'
+import { forgotPasswordSchema } from '@/features/auth/schemas'
 
-export function ForgotPasswordForm({
-  initialState = initialAuthFormState,
-}: {
-  initialState?: AuthFormState
-}) {
+export function ForgotPasswordForm() {
   const [state, formAction, pending] = useActionState(
     requestPasswordReset,
-    initialState,
+    initialFormState,
   )
-  const emailError = state.fieldErrors?.email
+
+  const form = useAppForm({
+    ...forgotPasswordFormOpts,
+    transform: useTransform(
+      (baseForm) => mergeForm(baseForm, state ?? {}),
+      [state],
+    ),
+    validationLogic: revalidateLogic(),
+    validators: { onDynamic: forgotPasswordSchema },
+    onSubmit: ({ meta }: { meta: FormData }) => {
+      startTransition(() => {
+        formAction(meta)
+      })
+    },
+  })
+
+  const formErrors = useSelector(form.store, (formState) => formState.errors)
+  const success =
+    'success' in state && typeof state.success === 'string'
+      ? state.success
+      : undefined
 
   return (
-    <form action={formAction}>
+    <form
+      action={formAction}
+      onSubmit={(e) => {
+        e.preventDefault()
+        const formData = new FormData(e.currentTarget)
+        void form.handleSubmit(formData)
+      }}
+    >
       <FieldGroup className='gap-(--card-spacing)'>
-        <Field
-          className='gap-[calc(var(--card-spacing)/2)]'
-          data-invalid={emailError ? true : undefined}
-        >
-          <FieldLabel htmlFor='email'>Email</FieldLabel>
-          <Input
-            id='email'
-            name='email'
-            type='email'
-            inputMode='email'
-            autoComplete='email'
-            autoCapitalize='none'
-            autoCorrect='off'
-            spellCheck={false}
-            placeholder='m@example.com'
-            autoFocus
-            required
-            aria-invalid={emailError ? true : undefined}
-          />
-          {emailError ? <FieldError>{emailError}</FieldError> : null}
-        </Field>
+        <form.AppField name='email'>
+          {(field) => (
+            <field.Field className='gap-[calc(var(--card-spacing)/2)]'>
+              <field.Label>Email</field.Label>
+              <field.TextField
+                type='email'
+                inputMode='email'
+                autoComplete='email'
+                autoCapitalize='none'
+                autoCorrect='off'
+                spellCheck={false}
+                placeholder='m@example.com'
+                autoFocus
+                required
+              />
+              <field.Errors />
+            </field.Field>
+          )}
+        </form.AppField>
 
         <Field className='gap-[calc(var(--card-spacing)/2)]'>
-          {state.error ? (
-            <FieldError aria-live='polite'>{state.error}</FieldError>
-          ) : null}
-          {state.success ? (
-            <FieldDescription aria-live='polite'>
-              {state.success}
+          <FieldError errors={formErrors} className='text-center' />
+
+          {success ? (
+            <FieldDescription
+              aria-live='polite'
+              className='text-center text-emerald-600'
+            >
+              {success}
             </FieldDescription>
           ) : null}
+
           <Button type='submit' disabled={pending}>
             {pending ? 'Sending...' : 'Send Reset Link'}
           </Button>
+
           <FieldDescription className='text-center'>
             Remembered your password?{' '}
             <Link className='hover:text-foreground!' href='/login'>

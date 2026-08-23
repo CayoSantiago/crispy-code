@@ -4,25 +4,34 @@ import { enabledSocialProviders } from '@repo/auth/config'
 import { auth } from '@repo/auth/server'
 import {
   createServerValidate,
-  type ServerFormState,
   ServerValidateError,
 } from '@tanstack/react-form-nextjs'
 import type { Route } from 'next'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import {
+  forgotPasswordFormOpts,
+  resetPasswordFormOpts,
+  signinFormOpts,
+  signupFormOpts,
+  verifyEmailFormOpts,
+} from '@/features/auth/form-opts'
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  type ServerActionResponse,
+} from '@/features/auth/helpers'
+import {
   FORGOT_PASSWORD_SUCCESS,
   isRateLimited,
   mapLoginErrorMessage,
-  mapResetPasswordError,
+  mapResetPasswordErrorMessage,
   mapSignupErrorMessage,
-  mapVerificationError,
+  mapVerificationErrorMessage,
   RATE_LIMIT_ERROR,
   VERIFY_EMAIL_SUCCESS,
 } from '@/features/auth/map-auth-error'
 import {
-  type AuthFormState,
-  firstFieldErrors,
   forgotPasswordSchema,
   formString,
   resetPasswordSchema,
@@ -30,20 +39,17 @@ import {
   signupSchema,
 } from '@/features/auth/schemas'
 import { getSession } from '@/features/auth/session'
-import { signinFormOpts, signupFormOpts } from './form-opts'
+import { type Option, tryCatch } from '@/lib/helpers'
 
-async function saferParse<T>(promise: Promise<T>): Promise<
-  | { success: true; data: T }
-  // biome-ignore lint/suspicious/noExplicitAny: fine here, not reading typed value
-  | { success: false; error: ServerFormState<any, any> }
-> {
-  try {
-    return { success: true, data: await promise }
-  } catch (error) {
-    if (error instanceof ServerValidateError)
-      return { success: false, error: error.formState }
-    throw error
+async function saferParse<T>(
+  promise: Promise<T>,
+): Promise<Option<T, ServerActionResponse>> {
+  const res = await tryCatch(promise)
+  if (res.success) return res
+  if (res.error instanceof ServerValidateError) {
+    return { success: false, error: res.error.formState }
   }
+  throw res.error
 }
 
 const signInServerValidate = createServerValidate({
@@ -57,24 +63,12 @@ export async function signInEmail(_prev: unknown, formData: FormData) {
   if (!parsed.success) return parsed.error
 
   try {
-    await auth.api.signInEmail({
-      headers: await headers(),
-      body: {
-        email: parsed.data.email,
-        password: parsed.data.password,
-      },
-    })
+    await auth.api.signInEmail({ headers: await headers(), body: parsed.data })
   } catch (error) {
-    const errorMessage = mapLoginErrorMessage(error)
-
-    return {
-      values: {
-        ...parsed.data,
-        password: '',
-      },
-      errorMap: { onServer: errorMessage },
-      errors: [errorMessage],
-    }
+    return createErrorResponse({
+      values: { ...parsed.data, password: '' },
+      message: mapLoginErrorMessage(error),
+    })
   }
 
   redirect('/')
@@ -101,16 +95,10 @@ export async function signUpEmail(_prev: unknown, formData: FormData) {
       },
     })
   } catch (error) {
-    const errorMessage = mapSignupErrorMessage(error)
-
-    return {
-      values: {
-        ...parsed.data,
-        password: '',
-      },
-      errorMap: { onServer: errorMessage },
-      errors: [errorMessage],
-    }
+    return createErrorResponse({
+      values: { ...parsed.data, password: '' },
+      message: mapSignupErrorMessage(error),
+    })
   }
 
   redirect('/verify-email')
@@ -151,48 +139,48 @@ export async function signInSocial(formData: FormData) {
   redirect('/login' as Route)
 }
 
-export async function requestPasswordReset(
-  _state: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  const parsed = forgotPasswordSchema.safeParse({
-    email: formString(formData, 'email'),
-  })
+const requestPasswordResetValidate = createServerValidate({
+  ...forgotPasswordFormOpts,
+  onServerValidate: forgotPasswordSchema,
+})
 
-  if (!parsed.success) {
-    return { fieldErrors: firstFieldErrors(parsed.error.flatten().fieldErrors) }
-  }
+export async function requestPasswordReset(_prev: unknown, formData: FormData) {
+  const parsed = await saferParse(requestPasswordResetValidate(formData))
+
+  if (!parsed.success) return parsed.error
 
   try {
     await auth.api.requestPasswordReset({
+      headers: await headers(),
       body: {
         email: parsed.data.email,
         redirectTo: '/reset-password',
       },
-      headers: await headers(),
     })
   } catch (error) {
     if (isRateLimited(error)) {
-      return { error: RATE_LIMIT_ERROR }
+      return createErrorResponse({
+        values: parsed.data,
+        message: RATE_LIMIT_ERROR,
+      })
     }
   }
 
-  return { success: FORGOT_PASSWORD_SUCCESS }
+  return createSuccessResponse({
+    values: parsed.data,
+    message: FORGOT_PASSWORD_SUCCESS,
+  })
 }
 
-export async function resetPassword(
-  _state: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  const parsed = resetPasswordSchema.safeParse({
-    token: formString(formData, 'token'),
-    password: formString(formData, 'password'),
-    confirmPassword: formString(formData, 'confirmPassword'),
-  })
+const resetPasswordValidate = createServerValidate({
+  ...resetPasswordFormOpts,
+  onServerValidate: resetPasswordSchema,
+})
 
-  if (!parsed.success) {
-    return { fieldErrors: firstFieldErrors(parsed.error.flatten().fieldErrors) }
-  }
+export async function resetPassword(_prev: unknown, formData: FormData) {
+  const parsed = await saferParse(resetPasswordValidate(formData))
+
+  if (!parsed.success) return parsed.error
 
   try {
     await auth.api.resetPassword({
@@ -203,39 +191,49 @@ export async function resetPassword(
       headers: await headers(),
     })
   } catch (error) {
-    return mapResetPasswordError(error)
+    return createErrorResponse({
+      values: {
+        ...parsed.data,
+        password: '',
+        confirmPassword: '',
+      },
+      message: mapResetPasswordErrorMessage(error),
+    })
   }
 
   redirect('/login' as Route)
 }
 
-export async function resendVerificationEmail(
-  _state: AuthFormState,
-  formData: FormData,
-): Promise<AuthFormState> {
-  const session = await getSession()
-  const email = session?.user.email ?? formString(formData, 'email')
-  const parsed = forgotPasswordSchema.safeParse({ email })
+const resendVerificationEmailValidate = createServerValidate({
+  ...verifyEmailFormOpts,
+  onServerValidate: forgotPasswordSchema,
+})
 
-  if (!parsed.success) {
-    return { fieldErrors: firstFieldErrors(parsed.error.flatten().fieldErrors) }
-  }
+export async function resendVerificationEmail(
+  _prev: unknown,
+  formData: FormData,
+) {
+  const parsed = await saferParse(resendVerificationEmailValidate(formData))
+
+  if (!parsed.success) return parsed.error
+
+  const email = (await getSession())?.user.email ?? parsed.data.email
 
   try {
     await auth.api.sendVerificationEmail({
-      body: {
-        email: parsed.data.email,
-        callbackURL: '/',
-      },
       headers: await headers(),
+      body: { email, callbackURL: '/' },
     })
   } catch (error) {
-    if (isRateLimited(error)) {
-      return { error: RATE_LIMIT_ERROR }
-    }
+    const errorMessage = isRateLimited(error)
+      ? RATE_LIMIT_ERROR
+      : mapVerificationErrorMessage(error)
 
-    return mapVerificationError(error)
+    return createErrorResponse({ values: { email }, message: errorMessage })
   }
 
-  return { success: VERIFY_EMAIL_SUCCESS }
+  return createSuccessResponse({
+    values: { email },
+    message: VERIFY_EMAIL_SUCCESS,
+  })
 }
