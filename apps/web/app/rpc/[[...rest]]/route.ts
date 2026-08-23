@@ -1,13 +1,19 @@
 import { onError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
 import { auth } from '@repo/auth/server'
+import { createLogger } from '@repo/observability/logger'
 import type { OrpcContext } from '@/lib/orpc/context'
 import { appRouter } from '@/lib/orpc/router'
+
+const log = createLogger('orpc')
 
 const handler = new RPCHandler(appRouter, {
   interceptors: [
     onError((error) => {
-      console.error(error)
+      log.error('orpc.unhandled', {
+        name: error instanceof Error ? error.name : 'unknown',
+        message: error instanceof Error ? error.message : String(error),
+      })
     }),
   ],
 })

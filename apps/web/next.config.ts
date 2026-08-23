@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
     '@repo/email',
     '@repo/env',
     '@repo/form',
+    '@repo/jobs',
+    '@repo/observability',
     '@repo/ui',
   ],
   typedRoutes: true,

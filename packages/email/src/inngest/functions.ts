@@ -1,9 +1,10 @@
 import 'server-only'
 
+import { inngest } from '@repo/jobs/client'
+import { logTo } from '@repo/observability/logger'
 import { getDelivery, markFailed } from '#delivery'
 import { isAlreadySent } from '#delivery-state'
-import { emailSend, inngest } from '#inngest/client'
-import { logEmail } from '#log'
+import { emailSend } from '#inngest/client'
 import { sendEmail } from '#send'
 
 export const sendEmailFn = inngest.createFunction(
@@ -22,7 +23,7 @@ export const sendEmailFn = inngest.createFunction(
 
       const existing = await getDelivery(idempotencyKey)
       if (isAlreadySent(existing)) {
-        logEmail(logger, 'warn', 'email.send.skipped', {
+        logTo(logger, 'warn', 'email.send.skipped', {
           idempotencyKey,
           skipped: true,
           reason: 'already-sent',
@@ -30,7 +31,7 @@ export const sendEmailFn = inngest.createFunction(
         return
       }
 
-      logEmail(logger, 'error', 'email.send.failed', {
+      logTo(logger, 'error', 'email.send.failed', {
         idempotencyKey,
         reason: error.message,
       })

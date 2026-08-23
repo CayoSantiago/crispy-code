@@ -10,7 +10,9 @@
   "dependencies": {
     "@repo/db": "workspace:*",
     "@repo/env": "workspace:*",
-    "inngest": "^4.18.1",
+    "@repo/jobs": "workspace:*",
+    "@repo/observability": "workspace:*",
+    "inngest": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-email": "^6.0.0",
@@ -23,12 +25,11 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
-    "next": "catalog:",
     "typescript": "catalog:"
   },
   "exports": {
-    "./next-handler": {
-      "default": "./src/inngest/serve.ts"
+    "./functions": {
+      "default": "./src/functions.ts"
     },
     "./schemas": {
       "default": "./src/schema.ts"

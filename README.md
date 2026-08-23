@@ -64,7 +64,7 @@ pnpm db:ping
 
 ## Transactional email (Inngest + Resend)
 
-Auth verification and password-reset mail is queued through Inngest and sent with Resend. Templates live in `packages/email` (`@repo/email`). Inngest failed runs plus Replay are the dead-letter queue; `email_delivery` in Postgres records status and the Resend message id so retries do not double-send.
+Auth verification and password-reset mail is queued through Inngest and sent with Resend. Templates and send functions live in `packages/email` (`@repo/email`). The Inngest client lives in `packages/jobs` (`@repo/jobs`). `apps/web` composes the `/api/inngest` handler. Inngest failed runs plus Replay are the dead-letter queue; `email_delivery` in Postgres records status and the Resend message id so retries do not double-send.
 
 Local development:
 

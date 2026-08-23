@@ -1,8 +1,8 @@
 import 'server-only'
 
 import { db } from '@repo/db'
-import { inngest } from '#inngest/client'
-import { logEmail } from '#log'
+import { inngest } from '@repo/jobs/client'
+import { logTo } from '@repo/observability/logger'
 
 const DAY = 24 * 60 * 60 * 1000
 
@@ -37,7 +37,7 @@ export const pruneEmailDeliveriesFn = inngest.createFunction(
         failed: failed.count,
       }
     })
-    logEmail(logger, 'info', 'email.prune.completed', result)
+    logTo(logger, 'info', 'email.prune.completed', result)
     return result
   },
 )

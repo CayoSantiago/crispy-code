@@ -1,12 +1,12 @@
 import 'server-only'
 
 import { env } from '@repo/env/server'
+import { type LogSink, logTo } from '@repo/observability/logger'
 import { render } from 'react-email'
 import { Resend } from 'resend'
 import { getDelivery, markSent } from '#delivery'
 import { isAlreadySent } from '#delivery-state'
 import { throwForResendError } from '#errors'
-import { type EmailLogger, logEmail } from '#log'
 import type { EmailSendPayload } from '#schema'
 import { isEmailSendingEnabled } from '#sending-enabled'
 import { emailSubjects, renderEmailTemplate } from '#templates/registry'
@@ -29,7 +29,7 @@ async function renderEmail(payload: EmailSendPayload) {
 
 export async function sendEmail(
   payload: EmailSendPayload,
-  logger: EmailLogger = console,
+  logger: LogSink = console,
 ) {
   const fields = {
     type: payload.type,
@@ -38,7 +38,7 @@ export async function sendEmail(
   }
 
   if (!isEmailSendingEnabled(env.CONTEXT)) {
-    logEmail(logger, 'info', 'email.send.skipped', {
+    logTo(logger, 'info', 'email.send.skipped', {
       ...fields,
       skipped: true,
       reason: 'preview',
@@ -48,7 +48,7 @@ export async function sendEmail(
 
   const existing = await getDelivery(payload.idempotencyKey)
   if (isAlreadySent(existing) && existing?.providerMessageId) {
-    logEmail(logger, 'info', 'email.send.skipped', {
+    logTo(logger, 'info', 'email.send.skipped', {
       ...fields,
       skipped: true,
       reason: 'already-sent',
@@ -73,7 +73,7 @@ export async function sendEmail(
   if (!data?.id) throw new Error('Resend did not return a message id')
 
   await markSent(payload.idempotencyKey, data.id)
-  logEmail(logger, 'info', 'email.send.sent', {
+  logTo(logger, 'info', 'email.send.sent', {
     ...fields,
     providerMessageId: data.id,
   })

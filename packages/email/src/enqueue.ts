@@ -1,12 +1,15 @@
 import 'server-only'
 
 import { env } from '@repo/env/server'
+import { inngest } from '@repo/jobs/client'
+import { createLogger } from '@repo/observability/logger'
 import { upsertQueued } from '#delivery'
-import { emailSend, inngest } from '#inngest/client'
-import { logEmail } from '#log'
+import { emailSend } from '#inngest/client'
 import { type EmailSendPayload, emailSendPayloadSchema } from '#schema'
 import { isEmailSendingEnabled } from '#sending-enabled'
 import { assertAllowedEmailUrl } from '#urls'
+
+const log = createLogger('email')
 
 export async function enqueueEmail(input: EmailSendPayload) {
   const payload = emailSendPayloadSchema.parse(input)
@@ -19,7 +22,7 @@ export async function enqueueEmail(input: EmailSendPayload) {
   }
 
   if (!isEmailSendingEnabled(env.CONTEXT)) {
-    logEmail(console, 'info', 'email.enqueue.skipped', {
+    log.info('email.enqueue.skipped', {
       ...fields,
       skipped: true,
       reason: 'preview',
@@ -28,16 +31,18 @@ export async function enqueueEmail(input: EmailSendPayload) {
   }
 
   await upsertQueued(payload)
+
   try {
     await inngest.send(
       emailSend.create(payload, { id: payload.idempotencyKey }),
     )
   } catch (error) {
-    logEmail(console, 'error', 'email.enqueue.failed', {
+    log.error('email.enqueue.failed', {
       ...fields,
       reason: error instanceof Error ? error.message : 'unknown',
     })
     throw error
   }
-  logEmail(console, 'info', 'email.enqueue.queued', fields)
+
+  log.info('email.enqueue.queued', fields)
 }

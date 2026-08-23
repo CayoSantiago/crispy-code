@@ -36,6 +36,9 @@ catalogs:
     date-fns:
       specifier: ^4.4.0
       version: 4.4.0
+    inngest:
+      specifier: ^4.18.1
+      version: 4.18.1
     lucide-react:
       specifier: ^1.26.0
       version: 1.33.0
@@ -119,6 +122,12 @@ importers:
       '@repo/form':
         specifier: workspace:*
         version: link:../../packages/form
+      '@repo/jobs':
+        specifier: workspace:*
+        version: link:../../packages/jobs
+      '@repo/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@repo/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -155,6 +164,9 @@ importers:
       d3-shape:
         specifier: ^3.2.0
         version: 3.2.0
+      inngest:
+        specifier: 'catalog:'
+        version: 4.18.1(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.13.3)(next@16.3.1(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@7.0.2)(zod@4.4.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.33.0(react@19.2.4)
@@ -304,8 +316,14 @@ importers:
       '@repo/env':
         specifier: workspace:*
         version: link:../env
+      '@repo/jobs':
+        specifier: workspace:*
+        version: link:../jobs
+      '@repo/observability':
+        specifier: workspace:*
+        version: link:../observability
       inngest:
-        specifier: ^4.18.1
+        specifier: 'catalog:'
         version: 4.18.1(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.13.3)(next@16.3.1(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@7.0.2)(zod@4.4.3)
       react:
         specifier: 'catalog:'
@@ -338,9 +356,6 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
-      next:
-        specifier: 'catalog:'
-        version: 16.3.1(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -406,6 +421,47 @@ importers:
       '@types/react-dom':
         specifier: 'catalog:'
         version: 19.2.4(@types/react@19.2.18)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  packages/jobs:
+    dependencies:
+      '@repo/env':
+        specifier: workspace:*
+        version: link:../env
+      inngest:
+        specifier: 'catalog:'
+        version: 4.18.1(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))(express@5.2.1)(hono@4.13.3)(next@16.3.1(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@types/node@24.13.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)(typescript@7.0.2)(zod@4.4.3)
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/biome-config':
+        specifier: workspace:*
+        version: link:../biome-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  packages/observability:
+    dependencies:
+      server-only:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@repo/biome-config':
+        specifier: workspace:*
+        version: link:../biome-config
+      '@repo/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -9103,7 +9159,7 @@ snapshots:
 
   '@types/pg-pool@2.0.7':
     dependencies:
-      '@types/pg': 8.15.6
+      '@types/pg': 8.23.1
 
   '@types/pg@8.15.6':
     dependencies:
