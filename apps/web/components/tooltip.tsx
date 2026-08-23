@@ -11,7 +11,9 @@ export function Tooltip({
   return (
     <ShadcnTooltip>
       <TooltipTrigger {...props} />
-      <TooltipContent>{tooltip}</TooltipContent>
+      <TooltipContent>
+        {typeof tooltip === 'string' ? <p>{tooltip}</p> : tooltip}
+      </TooltipContent>
     </ShadcnTooltip>
   )
 }
