@@ -1,6 +1,7 @@
 'use client'
 
 import { authClient } from '@repo/auth/client'
+import { Badge } from '@repo/ui/components/badge'
 import { Button } from '@repo/ui/components/button'
 import {
   DropdownMenu,
@@ -31,10 +32,21 @@ export function AppHeaderControls() {
     })
   }
 
-  if (isPending) return <Skeleton className='h-8 w-52' />
+  if (isPending)
+    return (
+      <div>
+        <Skeleton className='h-3 w-28' />
+        <Skeleton className='h-2.5 w-40 mt-1' />
+      </div>
+    )
 
   if (error)
-    return <div className='text-sm/relaxed text-destructive'>Error</div>
+    return (
+      <Badge variant='destructive' className='m-2'>
+        <span className='size-1.25 bg-destructive/80 rounded-full' />
+        <span>Error</span>
+      </Badge>
+    )
 
   const user = data?.user
 
@@ -55,7 +67,11 @@ export function AppHeaderControls() {
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant='ghost' size='lg' className='text-start h-11 block' />
+          <Button
+            variant='ghost'
+            size='lg'
+            className='text-start h-11 block space-y-0.5'
+          />
         }
       >
         <div className='leading-none text-sm font-medium'>{user.name}</div>
