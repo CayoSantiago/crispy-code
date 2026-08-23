@@ -12,7 +12,7 @@ import { BLOCKS_NAV } from '@/data/routes'
 
 export default function BlocksPage() {
   return (
-    <div className='grid grid-cols-1 w-full max-w-lg mx-auto gap-8 self-start pt-14'>
+    <div className='grid grid-cols-1 w-full max-w-lg gap-8'>
       <div className='flex items-center gap-2'>
         <Button
           nativeButton={false}

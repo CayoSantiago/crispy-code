@@ -8,8 +8,8 @@ import {
   FieldLabel,
 } from '@repo/ui/components/field'
 import { Input } from '@repo/ui/components/input'
-import { type FormEvent, useActionState } from 'react'
-import { type ConnectRepoState, connectRepo } from '@/app/git/actions'
+import { useActionState } from 'react'
+import { type ConnectRepoState, connectRepo } from '@/app/(main)/git/actions'
 import { parseRepoInput } from '@/features/github/parse-repo-input'
 import { rememberRecentRepo } from '@/features/github/recent-repos'
 
@@ -18,7 +18,7 @@ const initialState: ConnectRepoState = {}
 export function RepoForm() {
   const [state, formAction, pending] = useActionState(connectRepo, initialState)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     const formData = new FormData(event.currentTarget)
     const repo = String(formData.get('repo') ?? '')
     const parsed = parseRepoInput(repo)
