@@ -44,7 +44,7 @@ Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@rep
 cp .env.example .env
 ```
 
-Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `INNGEST_DEV=1` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` and OAuth client IDs in that file too.
+Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `INNGEST_DEV=1` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN`, `GEMINI_API_KEY`, and OAuth client IDs in that file too.
 
 GitHub and Google sign-in stay off until both the client ID and secret for that provider are set. OAuth callback URLs are `{BETTER_AUTH_URL}/api/auth/callback/github` and `{BETTER_AUTH_URL}/api/auth/callback/google`. `GITHUB_TOKEN` is still only for the GitHub REST client; it is not the GitHub OAuth app secret.
 
@@ -81,6 +81,12 @@ pnpm --filter @repo/email email:dev
 ```
 
 Production (Netlify) also needs `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Enable the Inngest Netlify integration or rely on `netlify-plugin-inngest`, which syncs `/api/inngest` after each deploy. Deploy Previews use Inngest branch environments via `BRANCH`.
+
+## AI workflows (not wired yet)
+
+The web app includes the Vercel AI SDK and the Google Gemini provider so future Inngest workflows can call `generateText` via `step.ai.wrap`. Nothing sends a model request yet.
+
+Optional: set `GEMINI_API_KEY` in `apps/web/.env.local`. The app boots without it. When a workflow is added, pass the key with `createGoogle({ apiKey: env.GEMINI_API_KEY })` rather than the SDK default `GOOGLE_GENERATIVE_AI_API_KEY`.
 
 ## Production database (Neon + Netlify)
 

@@ -20,6 +20,8 @@ export const env = createEnv({
 
     GITHUB_TOKEN: z.optional(z.string().min(1)),
 
+    GEMINI_API_KEY: z.optional(z.string().min(1)),
+
     NEON_API_KEY: z.optional(z.string().min(1)),
     NEON_PROJECT_ID: z.optional(z.string().min(1)),
 

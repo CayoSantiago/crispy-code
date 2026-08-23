@@ -20,7 +20,8 @@
     "EMAIL_FROM",
     "INNGEST_EVENT_KEY",
     "INNGEST_SIGNING_KEY",
-    "INNGEST_DEV"
+    "INNGEST_DEV",
+    "GEMINI_API_KEY"
   ],
   "tasks": {
     "build": {
