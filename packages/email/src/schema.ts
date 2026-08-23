@@ -13,20 +13,23 @@ const linkEmailPropsSchema = z.object({
   url: z.url(),
 })
 
-export const emailSendPayloadSchema = z.discriminatedUnion('type', [
+export const emailSendPropsSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('password-reset'),
-    to: z.email(),
-    idempotencyKey: z.string().min(1).max(256),
     props: linkEmailPropsSchema,
   }),
   z.object({
     type: z.literal('email-verification'),
-    to: z.email(),
-    idempotencyKey: z.string().min(1).max(256),
     props: linkEmailPropsSchema,
   }),
 ])
+
+export const emailSendPayloadSchema = z
+  .object({
+    to: z.email(),
+    idempotencyKey: z.string().min(1).max(256),
+  })
+  .and(emailSendPropsSchema)
 
 export type EmailSendPayload = z.infer<typeof emailSendPayloadSchema>
 
