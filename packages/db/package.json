@@ -5,6 +5,9 @@
   "private": true,
   "scripts": {
     "check-types": "tsc --noEmit",
+    "dev": "docker compose -f compose.dev.yaml up",
+    "db:up": "docker compose -f compose.dev.yaml up -d --wait",
+    "db:down": "docker compose -f compose.dev.yaml down",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",

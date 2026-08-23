@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "dev": "inngest-cli dev -u http://localhost:3000/api/inngest"
   },
   "dependencies": {
     "@repo/env": "workspace:*",
@@ -15,6 +16,7 @@
     "@repo/biome-config": "workspace:*",
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "inngest-cli": "^1.43.0",
     "typescript": "catalog:"
   },
   "exports": {

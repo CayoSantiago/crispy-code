@@ -29,19 +29,8 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**", "!.next/dev/**"]
     },
 
-    "//#db:dev": {
-      "cache": false,
-      "persistent": true
-    },
-
-    "//#inngest:dev": {
-      "cache": false,
-      "persistent": true
-    },
-
     "dev": {
       "dependsOn": ["^db:generate"],
-      "with": ["//#db:dev", "//#inngest:dev"],
       "cache": false,
       "persistent": true
     },

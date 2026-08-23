@@ -77,9 +77,6 @@ importers:
       '@repo/typescript-config':
         specifier: workspace:*
         version: link:packages/typescript-config
-      inngest-cli:
-        specifier: ^1.43.0
-        version: 1.43.0
       netlify-plugin-inngest:
         specifier: ^1.0.1
         version: 1.0.1
@@ -446,6 +443,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      inngest-cli:
+        specifier: ^1.43.0
+        version: 1.43.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

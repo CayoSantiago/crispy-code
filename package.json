@@ -5,14 +5,12 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
-    "inngest:dev": "inngest-cli dev -u http://localhost:3000/api/inngest",
     "lint": "biome check .",
     "lint:fix": "biome check . --write",
     "check-types": "turbo run check-types",
     "db:generate": "turbo run db:generate",
-    "db:dev": "docker compose up",
-    "db:up": "docker compose up -d --wait",
-    "db:down": "docker compose down",
+    "db:up": "pnpm --filter @repo/db db:up",
+    "db:down": "pnpm --filter @repo/db db:down",
     "db:migrate": "pnpm --filter @repo/db db:migrate",
     "db:deploy": "pnpm --filter @repo/db db:deploy",
     "db:push": "pnpm --filter @repo/db db:push",
@@ -25,7 +23,6 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.5",
     "@repo/typescript-config": "workspace:*",
-    "inngest-cli": "^1.43.0",
     "netlify-plugin-inngest": "^1.0.1",
     "turbo": "^2.9.18",
     "typescript": "catalog:"
