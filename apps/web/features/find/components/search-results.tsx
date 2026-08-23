@@ -13,9 +13,12 @@ import type { HighlightDecoration } from '@tanstack/highlight/core'
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { CheckIcon, FolderSearchIcon, LoaderCircleIcon } from 'lucide-react'
+import Link from 'next/link'
 import { parseAsBoolean, useQueryStates } from 'nuqs'
-import { CodeBlock, CodeBlockHeader } from '@/components/code-block'
+import { CodeBlock } from '@/components/code-block'
 import { CopyButton } from '@/components/copy-button'
+import { TruncatedFilePath } from '@/components/file'
+import { FileIcon } from '@/components/file-icon'
 import { Tooltip } from '@/components/tooltip'
 import { truncateFilesByMatchBudget } from '@/features/find/cluster-search-lines'
 import { ToggleSourcesSheetButton } from '@/features/find/components/sources-sheet'
@@ -155,13 +158,39 @@ export function SearchResults() {
                     decorations,
                   })
 
+                  const lineNum = Number(
+                    decorations.find((d) => d.data?.lineNumber)?.data
+                      ?.lineNumber,
+                  )
+
+                  const lineNumberToLink =
+                    Number.isNaN(lineNum) || !Number.isFinite(lineNum)
+                      ? undefined
+                      : lineNum
+
                   return (
                     <CodeBlock
                       key={file.absolutePath}
                       variant='full'
                       {...props}
                     >
-                      <CodeBlockHeader filePath={file.absolutePath}>
+                      <div className='flex items-center max-w-full gap-1.5 p-2 pr-3 bg-muted h-10'>
+                        <FileIcon filePath={file.absolutePath} />
+
+                        <figcaption className='min-w-0'>
+                          <Link
+                            href={{
+                              pathname: '/find/file',
+                              query: {
+                                path: file.absolutePath,
+                                line: lineNumberToLink,
+                              },
+                            }}
+                          >
+                            <TruncatedFilePath filePath={file.absolutePath} />
+                          </Link>
+                        </figcaption>
+
                         <div className='flex shrink-0 items-center gap-0.5 ml-auto'>
                           <CopyButton
                             copyText={file.absolutePath}
@@ -215,7 +244,7 @@ export function SearchResults() {
                             <VisualStudioCode />
                           </Tooltip>
                         </div>
-                      </CodeBlockHeader>
+                      </div>
                     </CodeBlock>
                   )
                 })}
@@ -293,6 +322,7 @@ function formatSearchFileData(file: SearchFile) {
             return {
               range: [startIdx + range.start, startIdx + range.end],
               className: 'bg-yellow-400/30',
+              data: { lineNumber: line.lineNumber },
             }
           }) ?? []),
     )
