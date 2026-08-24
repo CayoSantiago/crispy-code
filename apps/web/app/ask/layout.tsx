@@ -18,7 +18,6 @@ import { HistoryIcon, PlusIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 import { AppHeaderControls } from '@/components/app-header-controls'
-import { AskInput } from '@/features/ask/components/ask-input'
 import { AskStatusNotifications } from '@/features/ask/components/ask-status-notifications'
 import { ChatHistory } from '@/features/ask/components/chat-history'
 
@@ -45,10 +44,6 @@ export default function AskLayout({ children }: LayoutProps<'/ask'>) {
 
         <div className='grid grid-cols-1 w-full max-w-7xl mx-auto gap-4 grid-rows-[1fr_auto]'>
           {children}
-
-          <Suspense>
-            <AskInput />
-          </Suspense>
         </div>
       </main>
     </SidebarProvider>
