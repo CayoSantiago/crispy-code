@@ -1,4 +1,4 @@
-import { createGoogle } from '@ai-sdk/google'
+import { createGoogle, type GoogleProvider } from '@ai-sdk/google'
 import { env } from '@repo/env/server'
 import { generateText, Output, streamText } from 'ai'
 import { fetch as inngestFetch } from 'inngest'
@@ -7,7 +7,7 @@ import type { AskHistoryTurn } from '@/features/ask/schemas'
 import { type SearchPlan, searchPlanSchema } from '@/features/ask/schemas'
 import type { SearchGroup } from '@/features/find/schemas'
 
-const MODEL_ID = 'gemini-3.7-flash'
+const MODEL_ID: Parameters<GoogleProvider>[0] = 'gemini-3.5-flash'
 
 export function isGeminiConfigured(): boolean {
   return Boolean(env.GEMINI_API_KEY)

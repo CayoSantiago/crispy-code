@@ -65,23 +65,6 @@ export function ChatHistory() {
           </ContextMenuGroup>
         </ContextMenuContent>
       </ContextMenu>
-      {/* <Button
-        variant='ghost'
-        size='icon-xs'
-        aria-label={`Delete ${thread.title}`}
-        render={
-          <SidebarMenuAction
-            showOnHover
-            onClick={() => {
-              if (window.confirm('Delete this chat? This cannot be undone.')) {
-                deleteMutation.mutate({ threadId: thread.id })
-              }
-            }}
-          />
-        }
-      >
-        <Trash2Icon />
-      </Button> */}
     </SidebarMenuItem>
   ))
 }

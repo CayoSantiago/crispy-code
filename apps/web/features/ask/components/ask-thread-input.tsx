@@ -62,7 +62,7 @@ export function AskThreadInput({ threadId }: { threadId: string }) {
   }
 
   return (
-    <form className='pb-4' onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit}>
       <InputGroup className='h-9 bg-card rounded-full'>
         <InputGroupInput
           name='question'
