@@ -34,7 +34,7 @@ export function AppHeaderControls() {
 
   if (isPending)
     return (
-      <div>
+      <div className='px-2.5 h-11 flex flex-col justify-center'>
         <Skeleton className='h-3 w-28' />
         <Skeleton className='h-2.5 w-40 mt-1' />
       </div>
@@ -74,7 +74,7 @@ export function AppHeaderControls() {
           />
         }
       >
-        <div className='leading-none text-sm font-medium'>{user.name}</div>
+        <div className='leading-none text-sm font-normal'>{user.name}</div>
         <div className='leading-none text-xs font-normal text-muted-foreground'>
           {user.email}
         </div>

@@ -18,6 +18,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  askThreads    AskThread[]
 
   @@unique([email])
   @@map("user")
@@ -106,4 +107,46 @@ model RateLimit {
 
   @@unique([key])
   @@map("rate_limit")
+}
+
+enum AskTurnStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+
+  @@map("ask_turn_status")
+}
+
+model AskThread {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  turns     AskTurn[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("ask_thread")
+}
+
+model AskTurn {
+  id               String        @id @default(cuid())
+  threadId         String
+  thread           AskThread     @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  question         String
+  answer           String?
+  intent           String?
+  plannedQueries   Json?
+  usedFallbackPlan Boolean       @default(false)
+  groups           Json?
+  totalMatches     Int?
+  missingSources   Json?
+  inngestEventId   String?
+  status           AskTurnStatus
+  error            String?
+  createdAt        DateTime      @default(now())
+
+  @@index([threadId, createdAt])
+  @@map("ask_turn")
 }

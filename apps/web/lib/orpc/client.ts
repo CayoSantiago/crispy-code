@@ -36,4 +36,17 @@ export const client: RouterClient<AppRouter> = new Proxy(
   },
 )
 
-export const orpc = createTanstackQueryUtils(client)
+export const orpc = createTanstackQueryUtils(client, {
+  experimental_defaults: {
+    ask: {
+      getThread: {
+        queryOptions: {
+          refetchInterval: (query) =>
+            query.state.data?.turns.some((turn) => turn.status === 'RUNNING')
+              ? 1500
+              : false,
+        },
+      },
+    },
+  },
+})

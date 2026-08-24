@@ -82,11 +82,18 @@ pnpm --filter @repo/email email:dev
 
 Production (Netlify) also needs `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Enable the Inngest Netlify integration or rely on `netlify-plugin-inngest`, which syncs `/api/inngest` after each deploy. Deploy Previews use Inngest branch environments via `BRANCH`.
 
-## AI workflows (not wired yet)
+## Ask (`/ask`)
 
-The web app includes the Vercel AI SDK and the Google Gemini provider so future Inngest workflows can call `generateText` via `step.ai.wrap`. Nothing sends a model request yet.
+Signed-in users can ask about local code at `/ask`. Submitting a question creates a chat thread in Postgres and starts an Inngest function that:
 
-Optional: set `GEMINI_API_KEY` in `apps/web/.env.local`. The app boots without it. When a workflow is added, pass the key with `createGoogle({ apiKey: env.GEMINI_API_KEY })` rather than the SDK default `GOOGLE_GENERATIVE_AI_API_KEY`.
+1. Asks Gemini (`gemini-2.5-flash-lite`) to plan 1–3 ripgrep queries (`generateText` via `step.ai.wrap`)
+2. Runs those queries only against local folders already configured on Code Finder (`/find`)
+3. Asks Gemini for a short answer from a capped set of matching snippets
+4. Saves the turn on the thread
+
+Follow-ups stay in the same thread. History lives on the Ask page. Refreshing `/ask/[threadId]` reloads from Postgres and keeps polling while a turn is `RUNNING`. Ask does not search GitHub mirrors.
+
+Optional: set `GEMINI_API_KEY` in `apps/web/.env.local`. The app boots without it; Ask shows a banner until the key is set. Pass the key with `createGoogle({ apiKey: env.GEMINI_API_KEY })` rather than the SDK default `GOOGLE_GENERATIVE_AI_API_KEY`. After pulling this change, run `pnpm db:migrate` so the `ask_thread` and `ask_turn` tables exist.
 
 ## Production database (Neon + Netlify)
 
