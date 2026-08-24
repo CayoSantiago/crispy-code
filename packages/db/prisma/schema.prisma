@@ -117,6 +117,14 @@ enum AskTurnStatus {
   @@map("ask_turn_status")
 }
 
+enum AskSearchStage {
+  PLANNING
+  SEARCHING
+  WRITING
+
+  @@map("ask_search_stage")
+}
+
 model AskThread {
   id        String    @id @default(cuid())
   userId    String
@@ -143,6 +151,7 @@ model AskTurn {
   totalMatches     Int?
   missingSources   Json?
   inngestEventId   String?
+  searchStage      AskSearchStage?
   status           AskTurnStatus
   error            String?
   createdAt        DateTime      @default(now())

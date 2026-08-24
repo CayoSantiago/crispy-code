@@ -1,10 +1,11 @@
 import 'server-only'
 
-import { AskTurnStatus, db, type Prisma } from '@repo/db'
+import { AskSearchStage, AskTurnStatus, db, type Prisma } from '@repo/db'
 import { inngest } from '@repo/jobs/client'
-import { planSearch, writeAnswer } from '@/features/ask/gemini'
+import { planSearch, streamWriteAnswer } from '@/features/ask/gemini'
 import { askRun } from '@/features/ask/inngest/event'
-import type { SearchPlan } from '@/features/ask/schemas'
+import { askTurnChannel } from '@/features/ask/realtime'
+import type { AskHistoryTurn, SearchPlan } from '@/features/ask/schemas'
 import {
   loadLocalSources,
   runLocalSearches,
@@ -36,18 +37,8 @@ export const askRunFn = inngest.createFunction(
     )
 
     if (!sources.available.length) {
-      await step.run('persist-empty-sources', async () =>
-        persistTurn({
-          threadId,
-          turnId,
-          answer: null,
-          intent: null,
-          plannedQueries: [],
-          usedFallbackPlan: false,
-          groups: [],
-          totalMatches: 0,
-          missingSources: sources.missing,
-        }),
+      await step.run('fail-empty-sources', async () =>
+        markTurnFailed(turnId, 'No local folders configured for Ask.'),
       )
       return { turnId, empty: true }
     }
@@ -74,22 +65,59 @@ export const askRunFn = inngest.createFunction(
       }))
     }
 
+    await step.run('persist-plan', async () =>
+      db.askTurn.update({
+        where: { id: turnId },
+        data: {
+          intent: plan.intent,
+          plannedQueries: plan.searches as Prisma.InputJsonValue,
+          usedFallbackPlan,
+          searchStage: AskSearchStage.SEARCHING,
+        },
+      }),
+    )
+
     const groups = await step.run('ripgrep', async () =>
       runLocalSearches(sources.available, plan.searches),
     )
 
     const totalMatches = totalMatchCount(groups)
 
+    await step.run('persist-search', async () =>
+      db.askTurn.update({
+        where: { id: turnId },
+        data: {
+          groups: groups as Prisma.InputJsonValue,
+          totalMatches,
+          missingSources: sources.missing as Prisma.InputJsonValue,
+          searchStage:
+            totalMatches > 0
+              ? AskSearchStage.WRITING
+              : AskSearchStage.SEARCHING,
+        },
+      }),
+    )
+
     let answer: string | null = null
     if (totalMatches > 0) {
       try {
-        answer = await step.ai.wrap('write-answer', writeAnswer, {
-          question,
-          history,
-          evidence: groups,
-        })
-      } catch {
-        answer = null
+        answer = await step.run('write-answer', async () =>
+          streamTurnAnswer({
+            threadId,
+            turnId,
+            question,
+            history,
+            evidence: groups,
+          }),
+        )
+      } catch (error) {
+        await markTurnFailed(
+          turnId,
+          error instanceof Error
+            ? error.message
+            : 'Failed to write the answer.',
+        )
+        return { turnId, totalMatches, failed: true }
       }
     }
 
@@ -110,6 +138,59 @@ export const askRunFn = inngest.createFunction(
     return { turnId, totalMatches }
   },
 )
+
+async function streamTurnAnswer(input: {
+  threadId: string
+  turnId: string
+  question: string
+  history: AskHistoryTurn[]
+  evidence: SearchGroup[]
+}) {
+  let answer = ''
+  let lastPersist = 0
+  const topic = askTurnChannel({ turnId: input.turnId }).tokens
+
+  const persistAnswer = async (force = false) => {
+    const now = Date.now()
+    if (!force && now - lastPersist < 120) {
+      return
+    }
+    lastPersist = now
+    await db.askTurn.update({
+      where: { id: input.turnId },
+      data: { answer: answer || null },
+    })
+    await db.askThread.update({
+      where: { id: input.threadId },
+      data: { updatedAt: new Date() },
+    })
+  }
+
+  const publish = async (kind: 'thinking' | 'answer', text: string) => {
+    try {
+      await inngest.realtime.publish(topic, { kind, text })
+    } catch {
+      // Session-only Thinking; a missed token should not fail the turn.
+    }
+  }
+
+  answer = await streamWriteAnswer({
+    question: input.question,
+    history: input.history,
+    evidence: input.evidence,
+    onThinking: async (text) => {
+      await publish('thinking', text)
+    },
+    onAnswer: async (text) => {
+      answer += text
+      await publish('answer', text)
+      await persistAnswer()
+    },
+  })
+
+  await persistAnswer(true)
+  return answer
+}
 
 async function persistTurn(input: {
   threadId: string
@@ -132,6 +213,7 @@ async function persistTurn(input: {
       groups: input.groups as Prisma.InputJsonValue,
       totalMatches: input.totalMatches,
       missingSources: input.missingSources as Prisma.InputJsonValue,
+      searchStage: null,
       status: AskTurnStatus.COMPLETED,
       error: null,
     },
@@ -153,6 +235,7 @@ async function markTurnFailed(turnId: string, message: string) {
     where: { id: turnId },
     data: {
       status: AskTurnStatus.FAILED,
+      searchStage: null,
       error: message,
     },
   })

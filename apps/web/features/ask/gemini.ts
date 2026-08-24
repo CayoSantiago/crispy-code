@@ -1,14 +1,10 @@
 import { createGoogle } from '@ai-sdk/google'
 import { env } from '@repo/env/server'
-import { generateText, Output } from 'ai'
+import { generateText, Output, streamText } from 'ai'
 import { fetch as inngestFetch } from 'inngest'
 import type { z } from 'zod'
 import type { AskHistoryTurn } from '@/features/ask/schemas'
-import {
-  answerSchema,
-  type SearchPlan,
-  searchPlanSchema,
-} from '@/features/ask/schemas'
+import { type SearchPlan, searchPlanSchema } from '@/features/ask/schemas'
 import type { SearchGroup } from '@/features/find/schemas'
 
 const MODEL_ID = 'gemini-3.7-flash'
@@ -58,24 +54,66 @@ ${input.question}`
   return generateObject(searchPlanSchema, prompt)
 }
 
-export async function writeAnswer(input: {
+export async function streamWriteAnswer(input: {
   question: string
   history: AskHistoryTurn[]
   evidence: SearchGroup[]
+  onThinking?: (delta: string) => Promise<void> | void
+  onAnswer?: (delta: string) => Promise<void> | void
 }): Promise<string> {
-  const historyBlock = formatHistory(input.history)
-  const evidenceBlock = formatEvidence(input.evidence)
-  const prompt = `You answer questions using only the code evidence below. Write 2-5 short sentences of plain prose. Name files. Do not invent files that are not in the evidence. If the evidence is weak, say so.
+  const apiKey = env.GEMINI_API_KEY
+  if (!apiKey) {
+    throw new Error('GEMINI_API_KEY is not set.')
+  }
 
-${historyBlock}
+  const google = createGoogle({ apiKey, fetch: inngestFetch })
+  const result = streamText({
+    model: google(MODEL_ID),
+    prompt: answerPrompt(input.question, input.history, input.evidence),
+    maxRetries: 0,
+    providerOptions: {
+      google: {
+        thinkingConfig: {
+          includeThoughts: true,
+          thinkingLevel: 'minimal',
+        },
+      },
+    },
+  })
+
+  let answer = ''
+
+  for await (const part of result.fullStream) {
+    if (part.type === 'reasoning-delta' && part.text) {
+      await input.onThinking?.(part.text)
+    }
+    if (part.type === 'text-delta' && part.text) {
+      answer += part.text
+      await input.onAnswer?.(part.text)
+    }
+    if (part.type === 'error') {
+      throw part.error instanceof Error
+        ? part.error
+        : new Error('Gemini stream failed.')
+    }
+  }
+
+  return answer
+}
+
+function answerPrompt(
+  question: string,
+  history: AskHistoryTurn[],
+  evidence: SearchGroup[],
+): string {
+  return `You answer questions using only the code evidence below. Write 2-5 short sentences of plain prose. Name files. Do not invent files that are not in the evidence. If the evidence is weak, say so.
+
+${formatHistory(history)}
 Question:
-${input.question}
+${question}
 
 Evidence:
-${evidenceBlock}`
-
-  const { answer } = await generateObject(answerSchema, prompt)
-  return answer
+${formatEvidence(evidence)}`
 }
 
 function formatHistory(history: AskHistoryTurn[]): string {

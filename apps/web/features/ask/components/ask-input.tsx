@@ -41,7 +41,7 @@ export function AskInput() {
   }
 
   return (
-    <form className='sticky bottom-4' onSubmit={handleSubmit}>
+    <form className='pb-4' onSubmit={handleSubmit}>
       <InputGroup className='h-9 bg-card rounded-full'>
         <InputGroupInput
           name='question'

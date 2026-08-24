@@ -1,14 +1,16 @@
 import 'server-only'
 
-import { AskTurnStatus, db } from '@repo/db'
+import { AskSearchStage, AskTurnStatus, db } from '@repo/db'
 import { env } from '@repo/env/server'
 import { inngest } from '@repo/jobs/client'
 import { z } from 'zod'
 import { isGeminiConfigured } from '@/features/ask/gemini'
 import { askRun } from '@/features/ask/inngest/event'
+import { askTurnChannel } from '@/features/ask/realtime'
 import {
   type AskHistoryTurn,
   type AskTurn,
+  askRealtimeTokenInputSchema,
   askStartInputSchema,
   askStartOutputSchema,
   askStatusOutputSchema,
@@ -89,6 +91,7 @@ export const askRouter = {
           threadId,
           question: input.question,
           status: AskTurnStatus.RUNNING,
+          searchStage: AskSearchStage.PLANNING,
         },
       })
 
@@ -193,6 +196,32 @@ export const askRouter = {
 
       return { ok: true as const }
     }),
+  realtimeToken: base
+    .input(askRealtimeTokenInputSchema)
+    .handler(async ({ context, input, errors }) => {
+      if (!context.user) {
+        throw errors.FORBIDDEN({
+          message: 'Sign in to ask about your local code.',
+        })
+      }
+
+      const turn = await db.askTurn.findFirst({
+        where: {
+          id: input.turnId,
+          thread: { id: input.threadId, userId: context.user.id },
+        },
+        select: { id: true },
+      })
+
+      if (!turn) {
+        throw errors.NOT_FOUND({ message: 'Chat not found.' })
+      }
+
+      return inngest.realtime.token({
+        channel: askTurnChannel({ turnId: turn.id }),
+        topics: ['tokens'],
+      })
+    }),
 }
 
 function serializeTurn(turn: {
@@ -205,6 +234,7 @@ function serializeTurn(turn: {
   groups: unknown
   totalMatches: number | null
   missingSources: unknown
+  searchStage: AskSearchStage | null
   status: AskTurnStatus
   error: string | null
   createdAt: Date
@@ -213,6 +243,8 @@ function serializeTurn(turn: {
     turn.intent === 'component' || turn.intent === 'solution'
       ? turn.intent
       : null
+
+  const completed = turn.status === AskTurnStatus.COMPLETED
 
   return askTurnSchema.parse({
     id: turn.id,
@@ -224,12 +256,20 @@ function serializeTurn(turn: {
       .catch([])
       .parse(turn.plannedQueries),
     usedFallbackPlan: turn.usedFallbackPlan,
-    groups: searchGroupSchema.array().catch([]).parse(turn.groups),
-    totalMatches: turn.totalMatches ?? 0,
-    missingSources: z
-      .array(z.object({ id: z.string(), label: z.string() }))
-      .catch([])
-      .parse(turn.missingSources),
+    groups: completed
+      ? searchGroupSchema.array().catch([]).parse(turn.groups)
+      : [],
+    totalMatches: completed ? (turn.totalMatches ?? 0) : 0,
+    missingSources: completed
+      ? z
+          .array(z.object({ id: z.string(), label: z.string() }))
+          .catch([])
+          .parse(turn.missingSources)
+      : [],
+    searchStage:
+      turn.status === AskTurnStatus.RUNNING
+        ? (turn.searchStage ?? 'PLANNING')
+        : null,
     status: turn.status,
     error: turn.error,
     createdAt: turn.createdAt.toISOString(),

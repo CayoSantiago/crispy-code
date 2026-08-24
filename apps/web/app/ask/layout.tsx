@@ -26,7 +26,7 @@ export default function AskLayout({ children }: LayoutProps<'/ask'>) {
     <SidebarProvider>
       <ChatSidebar />
 
-      <main className='p-6 pt-0 min-h-svh w-full grid grid-cols-1 grid-rows-[auto_1fr] bg-muted/50 dark:bg-background gap-2'>
+      <main className='grid min-h-svh w-full grid-cols-1 grid-rows-[auto_minmax(0,1fr)] gap-2 bg-muted/50 p-6 pt-0 dark:bg-background'>
         <div className='flex items-center gap-2 p-1 pr-2.5 self-start -mx-6 h-8'>
           <SidebarTrigger />
 
@@ -42,7 +42,7 @@ export default function AskLayout({ children }: LayoutProps<'/ask'>) {
           </Link>
         </div>
 
-        <div className='grid grid-cols-1 w-full max-w-7xl mx-auto gap-4 grid-rows-[1fr_auto]'>
+        <div className='mx-auto flex h-full min-h-0 w-full max-w-7xl flex-col'>
           {children}
         </div>
       </main>

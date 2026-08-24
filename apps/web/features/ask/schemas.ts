@@ -28,6 +28,8 @@ export const askHistoryTurnSchema = z.object({
 
 export const askTurnStatusSchema = z.enum(['RUNNING', 'COMPLETED', 'FAILED'])
 
+export const askSearchStageSchema = z.enum(['PLANNING', 'SEARCHING', 'WRITING'])
+
 export const askTurnSchema = z.object({
   id: z.string(),
   question: z.string(),
@@ -38,9 +40,15 @@ export const askTurnSchema = z.object({
   groups: z.array(searchGroupSchema),
   totalMatches: z.number(),
   missingSources: searchResponseSchema.shape.missingSources,
+  searchStage: askSearchStageSchema.nullable(),
   status: askTurnStatusSchema,
   error: z.string().nullable(),
   createdAt: z.string(),
+})
+
+export const askRealtimeTokenInputSchema = z.object({
+  threadId: z.string().min(1),
+  turnId: z.string().min(1),
 })
 
 export const askThreadSchema = z.object({
@@ -75,6 +83,7 @@ export type AskIntent = z.infer<typeof askIntentSchema>
 export type PlannedSearch = z.infer<typeof plannedSearchSchema>
 export type SearchPlan = z.infer<typeof searchPlanSchema>
 export type AskHistoryTurn = z.infer<typeof askHistoryTurnSchema>
+export type AskSearchStage = z.infer<typeof askSearchStageSchema>
 export type AskTurn = z.infer<typeof askTurnSchema>
 export type AskThread = z.infer<typeof askThreadSchema>
 export type AskThreadSummary = z.infer<typeof askThreadSummarySchema>

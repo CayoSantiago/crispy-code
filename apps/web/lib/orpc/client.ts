@@ -43,7 +43,7 @@ export const orpc = createTanstackQueryUtils(client, {
         queryOptions: {
           refetchInterval: (query) =>
             query.state.data?.turns.some((turn) => turn.status === 'RUNNING')
-              ? 1500
+              ? 400
               : false,
         },
       },
