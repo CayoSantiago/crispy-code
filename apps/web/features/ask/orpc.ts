@@ -11,6 +11,8 @@ import {
   type AskHistoryTurn,
   type AskTurn,
   askRealtimeTokenInputSchema,
+  askRenameThreadInputSchema,
+  askRenameThreadOutputSchema,
   askStartInputSchema,
   askStartOutputSchema,
   askStatusOutputSchema,
@@ -193,6 +195,35 @@ export const askRouter = {
       if (result.count === 0) {
         throw errors.NOT_FOUND({ message: 'Chat not found.' })
       }
+
+      return { ok: true as const }
+    }),
+  renameThread: base
+    .input(askRenameThreadInputSchema)
+    .output(askRenameThreadOutputSchema)
+    .handler(async ({ context, input, errors }) => {
+      if (!context.user) {
+        throw errors.FORBIDDEN({
+          message: 'Sign in to ask about your local code.',
+        })
+      }
+
+      const thread = await db.askThread.findFirst({
+        where: { id: input.threadId, userId: context.user.id },
+        select: { id: true, updatedAt: true },
+      })
+
+      if (!thread) {
+        throw errors.NOT_FOUND({ message: 'Chat not found.' })
+      }
+
+      await db.askThread.update({
+        where: { id: thread.id },
+        data: {
+          title: input.title,
+          updatedAt: thread.updatedAt,
+        },
+      })
 
       return { ok: true as const }
     }),

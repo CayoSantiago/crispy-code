@@ -65,6 +65,15 @@ export const askThreadSummarySchema = z.object({
   updatedAt: z.string(),
 })
 
+export const askRenameThreadInputSchema = z.object({
+  threadId: z.string().min(1),
+  title: z.string().trim().min(1).max(80),
+})
+
+export const askRenameThreadOutputSchema = z.object({
+  ok: z.literal(true),
+})
+
 export const askStartInputSchema = z.object({
   question: z.string().trim().min(1, 'Ask a question about your local code.'),
   threadId: z.string().min(1).optional(),
