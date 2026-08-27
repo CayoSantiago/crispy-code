@@ -20,8 +20,12 @@ export function registerFindTools(): void {
         return { groups: [], missing: sources.missing, empty: true as const }
       }
 
-      const groups = await runLocalSearches(sources.available, input.searches)
-      return { groups, missing: sources.missing, empty: false as const }
+      const search = await runLocalSearches(sources.available, input.searches)
+      return {
+        groups: search.groups,
+        missing: [...sources.missing, ...search.unavailable],
+        empty: false as const,
+      }
     },
   })
 }

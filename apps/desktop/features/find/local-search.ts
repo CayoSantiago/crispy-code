@@ -35,20 +35,31 @@ export async function loadLocalSources(): Promise<{
 export async function runLocalSearches(
   sources: SearchSource[],
   searches: PlannedLocalSearch[],
-): Promise<SearchGroup[]> {
+): Promise<{
+  groups: SearchGroup[]
+  unavailable: Array<{ id: string; label: string }>
+}> {
   const events: SearchLineEvent[] = []
   const seen = new Set<string>()
+  const unavailable = new Map<string, SearchSource>()
+  let searchableSources = sources
 
   for (const search of searches.slice(0, 3)) {
-    const batch = await searchAcrossSources(sources, {
+    const batch = await searchAcrossSources(searchableSources, {
       query: search.query,
       mode: search.mode,
       caseSensitive: false,
       pathGlob: search.pathGlob,
       maxResultsPerSource: 50,
     })
+    for (const source of batch.unavailable) {
+      unavailable.set(source.id, source)
+    }
+    searchableSources = searchableSources.filter(
+      (source) => !unavailable.has(source.id),
+    )
 
-    for (const event of batch) {
+    for (const event of batch.events) {
       const key = `${event.absolutePath}:${event.lineNumber}:${event.kind}`
       if (seen.has(key)) continue
       seen.add(key)
@@ -56,7 +67,13 @@ export async function runLocalSearches(
     }
   }
 
-  return capSearchGroups(buildSearchGroups(events))
+  return {
+    groups: capSearchGroups(buildSearchGroups(events)),
+    unavailable: [...unavailable.values()].map((source) => ({
+      id: source.id,
+      label: source.label,
+    })),
+  }
 }
 
 export function totalMatchCount(groups: SearchGroup[]): number {

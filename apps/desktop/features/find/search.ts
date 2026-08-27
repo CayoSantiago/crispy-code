@@ -5,7 +5,8 @@ import type {
   FindConfig,
   LocalRootSource,
 } from '@/features/find/config/schemas'
-import { pathExists } from '@/lib/fs'
+import { settleSourceSearches } from '@/features/find/settle-source-searches'
+import { isReadableDir } from '@/lib/fs'
 import type { SearchLineEvent } from './cluster-search-lines'
 import type { SearchMode } from './schemas'
 import { createSourceMatchBudget } from './search-budget'
@@ -61,7 +62,7 @@ export async function getSearchSources(config: FindConfig): Promise<{
   const missing: SearchSource[] = []
 
   for (const source of config.localRoots.map(sourceFromLocal)) {
-    if (await pathExists(source.rootPath)) {
+    if (await isReadableDir(source.rootPath)) {
       available.push(source)
     } else {
       missing.push(source)
@@ -203,15 +204,21 @@ export async function searchAcrossSources(
   sources: SearchSource[],
   options: SearchOptions,
   signal?: AbortSignal,
-): Promise<SearchLineEvent[]> {
+): Promise<{
+  events: SearchLineEvent[]
+  unavailable: SearchSource[]
+}> {
   const query = options.query.trim()
-  if (!query) return []
+  if (!query) return { events: [], unavailable: [] }
 
-  const all = await Promise.all(
-    sources.map((source) => runRipgrep(source, options, signal)),
+  const result = await settleSourceSearches(sources, (source) =>
+    runRipgrep(source, options, signal),
   )
 
-  return all
-    .flat()
-    .sort((left, right) => left.sourceLabel.localeCompare(right.sourceLabel))
+  return {
+    events: result.results
+      .flat()
+      .sort((left, right) => left.sourceLabel.localeCompare(right.sourceLabel)),
+    unavailable: result.unavailable,
+  }
 }

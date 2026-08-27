@@ -1,16 +1,8 @@
-import {
-  access,
-  constants,
-  mkdir,
-  readdir,
-  readFile,
-  rm,
-  rmdir,
-  stat,
-} from 'node:fs/promises'
+import { mkdir, readdir, readFile, rm, rmdir, stat } from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import type z from 'zod'
+import { isReadableDirectory } from '@/lib/is-readable-directory'
 import { formatIssues } from '@/lib/schemas'
 
 export async function pathExists(inputPath: string): Promise<boolean> {
@@ -26,14 +18,7 @@ export async function ensureDir(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true })
 }
 
-export async function isReadableDir(dir: string): Promise<boolean> {
-  try {
-    await access(dir, constants.R_OK)
-    return true
-  } catch {
-    return false
-  }
-}
+export const isReadableDir = isReadableDirectory
 
 export function normalizeLocalPath(raw: string): string {
   if (raw.startsWith('~/')) {
