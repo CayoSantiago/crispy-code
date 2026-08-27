@@ -18,8 +18,14 @@ test('threadTitleFromQuestion limits titles to 80 characters', () => {
 })
 
 test('reconcileTurnAnswer uses the complete prefix-compatible value', () => {
-  assert.equal(reconcileTurnAnswer('Complete ', 'Complete answer'), 'Complete answer')
-  assert.equal(reconcileTurnAnswer('Complete answer', 'Complete '), 'Complete answer')
+  assert.equal(
+    reconcileTurnAnswer('Complete ', 'Complete answer'),
+    'Complete answer',
+  )
+  assert.equal(
+    reconcileTurnAnswer('Complete answer', 'Complete '),
+    'Complete answer',
+  )
 })
 
 test('reconcileTurnAnswer does not replace stored text with a partial suffix', () => {
