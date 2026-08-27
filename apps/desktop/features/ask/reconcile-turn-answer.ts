@@ -1,3 +1,10 @@
 export function reconcileTurnAnswer(stored: string, streamed: string): string {
-  return streamed.length >= stored.length ? streamed : stored
+  if (!stored || streamed.startsWith(stored)) {
+    return streamed
+  }
+  if (!streamed || stored.startsWith(streamed)) {
+    return stored
+  }
+
+  return stored
 }
