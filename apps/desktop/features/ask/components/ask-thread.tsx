@@ -20,6 +20,7 @@ import { useQuery } from '@tanstack/react-query'
 import { ChevronRightIcon, LoaderCircleIcon } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useAskTurnStream } from '@/features/ask/hooks/use-ask-turn-stream'
+import { reconcileTurnAnswer } from '@/features/ask/reconcile-turn-answer'
 import type { AskSearchStage, AskTurn } from '@/features/ask/schemas'
 import { SearchHitList } from '@/features/find/components/search-hit-list'
 import { orpc } from '@/lib/orpc/client'
@@ -109,7 +110,7 @@ function AskTurnItems({
   liveAnswer: string
 }) {
   const stored = turn.answer ?? ''
-  const answer = liveAnswer.length >= stored.length ? liveAnswer : stored
+  const answer = reconcileTurnAnswer(stored, liveAnswer)
 
   return (
     <>
