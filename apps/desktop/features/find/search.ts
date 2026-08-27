@@ -7,8 +7,8 @@ import type {
 } from '@/features/find/config/schemas'
 import { pathExists } from '@/lib/fs'
 import type { SearchLineEvent } from './cluster-search-lines'
-import { createSourceMatchBudget } from './search-budget'
 import type { SearchMode } from './schemas'
+import { createSourceMatchBudget } from './search-budget'
 
 export type { SearchMode }
 
@@ -96,13 +96,7 @@ function runRipgrep(
 
   const pathGlob = options.pathGlob.trim()
   const maxResults = options.maxResultsPerSource ?? 100
-  const args = [
-    '--json',
-    '--line-number',
-    '--ignore-case',
-    '--context',
-    '2',
-  ]
+  const args = ['--json', '--line-number', '--ignore-case', '--context', '2']
 
   if (options.caseSensitive) {
     args.push('--case-sensitive')
