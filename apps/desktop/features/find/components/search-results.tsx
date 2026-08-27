@@ -1,0 +1,96 @@
+'use client'
+
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from '@repo/ui/components/empty'
+import { cn } from '@repo/ui/lib/utils'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
+import { LoaderCircleIcon } from 'lucide-react'
+import { parseAsBoolean, useQueryStates } from 'nuqs'
+import { SearchHitList } from '@/features/find/components/search-hit-list'
+import { ToggleSourcesSheetButton } from '@/features/find/components/sources-sheet'
+import { useDebounce } from '@/hooks/use-debounce'
+import { stringParser } from '@/lib/nuqs/parsers'
+import { orpc } from '@/lib/orpc/client'
+
+export function SearchResults() {
+  const configQuery = useQuery(orpc.find.getConfig.queryOptions())
+  const [filters] = useQueryStates({
+    q: stringParser.withDefault('').withOptions({ clearOnDefault: true }),
+    path: stringParser.withDefault('').withOptions({ clearOnDefault: true }),
+    case: parseAsBoolean.withDefault(false),
+    regex: parseAsBoolean.withDefault(false),
+  })
+  const searchInput = {
+    query: useDebounce(filters.q, 220),
+    mode: filters.regex ? 'regex' : 'literal',
+    caseSensitive: filters.case,
+    pathGlob: useDebounce(filters.path, 220),
+  } as const
+  const { data, isFetching, error } = useQuery(
+    orpc.find.search.queryOptions({
+      input: searchInput,
+      enabled: searchInput.query.length > 0,
+      placeholderData: keepPreviousData,
+    }),
+  )
+
+  if (configQuery.isSuccess && !configQuery.data.localRoots.length) {
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Start by adding a local folder</EmptyTitle>
+          <EmptyDescription>
+            Add a folder from this machine, then search across its code.
+          </EmptyDescription>
+        </EmptyHeader>
+        <ToggleSourcesSheetButton type='button' variant='outline' size='sm'>
+          Open Sources
+        </ToggleSourcesSheetButton>
+      </Empty>
+    )
+  }
+
+  if (!filters.q.trim().length) return null
+
+  return (
+    <>
+      {data?.missingSources.length ? (
+        <div className='border-l-2 border-amber-500/50 pl-3 text-xs text-muted-foreground'>
+          Missing folders:{' '}
+          {data.missingSources.map((source) => source.label).join(', ')}
+        </div>
+      ) : null}
+      {error?.message ? (
+        <div className='border-l-2 border-destructive/50 pl-3 text-xs text-destructive'>
+          Search failed: {error.message}
+        </div>
+      ) : null}
+      <div
+        aria-hidden={!isFetching}
+        className={cn(
+          'flex items-center gap-2 -mb-4 text-xs text-muted-foreground',
+          !isFetching && 'opacity-0',
+        )}
+      >
+        <LoaderCircleIcon className='size-3.5 animate-spin' />
+        Searching...
+      </div>
+      {!isFetching && !data?.totalMatches ? (
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>No matches</EmptyTitle>
+            <EmptyDescription>
+              Try broadening the query or removing filters.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <SearchHitList groups={data?.groups ?? []} />
+      )}
+    </>
+  )
+}

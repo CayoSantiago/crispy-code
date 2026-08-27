@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Geist_Mono, Inter } from 'next/font/google'
 import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
+import { HighlighterStyles } from '@/lib/highlighter/theme'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<'/'>) {
       )}
     >
       <body suppressHydrationWarning>
+        <HighlighterStyles />
         <ThemeProvider>
           <Providers>{children}</Providers>
         </ThemeProvider>
