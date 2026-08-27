@@ -1,5 +1,4 @@
 import '@repo/ui/globals.css'
-import '@/lib/orpc/client.server'
 
 import { env } from '@repo/env/next'
 import { TooltipProvider } from '@repo/ui/components/tooltip'
