@@ -1,3 +1,11 @@
-export default function AskHomePage() {
-  return <main className='p-6'>Ask (desktop scaffold)</main>
+import { AskInput } from '@/features/ask/components/ask-input'
+import { AskShell } from '@/features/ask/components/ask-shell'
+import { AskEmpty } from '@/features/ask/components/ask-thread'
+
+export default function AskPage() {
+  return (
+    <AskShell composer={<AskInput />}>
+      <AskEmpty />
+    </AskShell>
+  )
 }
