@@ -28,6 +28,8 @@ export function FileImagePreview({
         {children}
       </CodeBlockHeader>
       <div className='flex justify-center bg-muted/40 p-4'>
+        {/* Data URL of bytes we already inspected; not a remote image. */}
+        {/* biome-ignore lint/performance/noImgElement: data-URL preview, not a Next image asset */}
         <img
           src={src}
           alt={filePath}

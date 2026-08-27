@@ -43,9 +43,7 @@ export function SearchQueryToggle({
         <input
           type='checkbox'
           className='hidden'
-          onChange={(event) =>
-            setToggle(event.target.checked ? 'true' : null)
-          }
+          onChange={(event) => setToggle(event.target.checked ? 'true' : null)}
           id={`${queryKey}-query-toggle`}
         />
       </label>

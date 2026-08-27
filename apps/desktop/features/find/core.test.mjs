@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
+import { capSearchGroups } from './cap-evidence.ts'
 import {
   buildSearchGroups,
   truncateFilesByMatchBudget,
 } from './cluster-search-lines.ts'
-import { capSearchGroups } from './cap-evidence.ts'
 
 const event = (overrides = {}) => ({
   sourceId: 'local:root',

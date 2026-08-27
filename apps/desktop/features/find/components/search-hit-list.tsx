@@ -167,6 +167,7 @@ function formatSearchFileData(file: SearchFile) {
       !all.length
         ? cluster.lines
         : [
+            // biome-ignore lint/performance/noAccumulatingSpread: search previews are intentionally small
             ...all,
             ...(cluster.lines.length
               ? [

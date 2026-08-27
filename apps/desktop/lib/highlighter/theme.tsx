@@ -8,5 +8,8 @@ const highlightCss = createThemeCss({
 })
 
 export function HighlighterStyles() {
-  return <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+  return (
+    // biome-ignore lint/security/noDangerouslySetInnerHtml: CSS is generated from bundled themes
+    <style dangerouslySetInnerHTML={{ __html: highlightCss }} />
+  )
 }
