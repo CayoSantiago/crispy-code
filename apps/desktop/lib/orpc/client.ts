@@ -1,7 +1,10 @@
 import { createORPCClient } from '@orpc/client'
 import { RPCLink } from '@orpc/client/fetch'
 import type { RouterClient } from '@orpc/server'
-import { createTanstackQueryUtils } from '@orpc/tanstack-query'
+import {
+  createTanstackQueryUtils,
+  type RouterUtils,
+} from '@orpc/tanstack-query'
 import type { AppRouter } from '@/lib/orpc/router'
 
 declare global {
@@ -36,4 +39,4 @@ export const client: RouterClient<AppRouter> = new Proxy(
   },
 )
 
-export const orpc = createTanstackQueryUtils(client)
+export const orpc: RouterUtils<typeof client> = createTanstackQueryUtils(client)

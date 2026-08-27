@@ -57,6 +57,8 @@ function buildFilesForEvents(events: SearchLineEvent[]): SearchFile[] {
     const needsNewCluster =
       lastLineNumber >= 0 && event.lineNumber > lastLineNumber + 1
 
+    if (!currentFile) continue
+
     if (needsNewCluster) {
       currentFile.clusters.push({ lines: [] })
     }
