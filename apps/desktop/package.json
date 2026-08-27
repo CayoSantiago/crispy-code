@@ -1,0 +1,40 @@
+{
+  "name": "desktop",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "node ./scripts/dev.mjs",
+    "dev:next": "next dev -p 3002 -H 127.0.0.1",
+    "build": "next build",
+    "start": "next start -p 3002 -H 127.0.0.1",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ai-sdk/google": "catalog:",
+    "@orpc/client": "^1.14.13",
+    "@orpc/server": "^1.14.13",
+    "@orpc/tanstack-query": "^1.14.13",
+    "@repo/ui": "workspace:*",
+    "@tanstack/react-query": "^5.101.4",
+    "ai": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "nuqs": "^2.9.4",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "server-only": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@repo/biome-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "electron": "^37.2.0",
+    "typescript": "catalog:"
+  }
+}
