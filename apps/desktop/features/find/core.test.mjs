@@ -5,6 +5,8 @@ import {
   buildSearchGroups,
   truncateFilesByMatchBudget,
 } from './cluster-search-lines.ts'
+import { localRootIdFromPath } from './root-id.ts'
+import { createSourceMatchBudget } from './search-budget.ts'
 
 const event = (overrides = {}) => ({
   sourceId: 'local:root',
@@ -38,6 +40,25 @@ test('truncateFilesByMatchBudget never returns a partial cluster', () => {
   ])
 
   assert.deepEqual(truncateFilesByMatchBudget(group.files, 1), [])
+})
+
+test('createSourceMatchBudget limits matches across files and chunks', () => {
+  const budget = createSourceMatchBudget(2)
+
+  assert.equal(budget.accept('context'), true)
+  assert.equal(budget.accept('match'), true)
+  assert.equal(budget.reached, false)
+  assert.equal(budget.accept('match'), true)
+  assert.equal(budget.reached, true)
+  assert.equal(budget.accept('context'), false)
+  assert.equal(budget.accept('match'), false)
+})
+
+test('localRootIdFromPath keeps case-distinct Linux paths unique', () => {
+  assert.notEqual(
+    localRootIdFromPath('/workspace/Project'),
+    localRootIdFromPath('/workspace/project'),
+  )
 })
 
 test('capSearchGroups limits evidence to eight files', () => {

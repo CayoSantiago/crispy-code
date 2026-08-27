@@ -26,6 +26,9 @@ export function SourcesPanel() {
         await queryClient.invalidateQueries({
           queryKey: orpc.find.getConfig.key(),
         })
+        await queryClient.invalidateQueries({
+          queryKey: orpc.find.search.key(),
+        })
       },
     }),
   )

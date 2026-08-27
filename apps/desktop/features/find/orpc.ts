@@ -5,6 +5,7 @@ import {
   readFindConfig,
   updateFindConfig,
 } from '@/features/find/config/service'
+import { localRootIdFromPath } from '@/features/find/root-id'
 import {
   searchResponseSchema,
   searchRpcInputSchema,
@@ -50,7 +51,11 @@ export const findRouter = {
           ...current,
           localRoots: [
             ...current.localRoots,
-            { id: absolute.toLowerCase(), path: absolute, addedAt: nowIso() },
+            {
+              id: localRootIdFromPath(absolute),
+              path: absolute,
+              addedAt: nowIso(),
+            },
           ],
         }
       })

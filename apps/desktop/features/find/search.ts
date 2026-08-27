@@ -7,6 +7,7 @@ import type {
 } from '@/features/find/config/schemas'
 import { pathExists } from '@/lib/fs'
 import type { SearchLineEvent } from './cluster-search-lines'
+import { createSourceMatchBudget } from './search-budget'
 import type { SearchMode } from './schemas'
 
 export type { SearchMode }
@@ -98,8 +99,6 @@ function runRipgrep(
   const args = [
     '--json',
     '--line-number',
-    '--max-count',
-    String(maxResults),
     '--ignore-case',
     '--context',
     '2',
@@ -122,9 +121,11 @@ function runRipgrep(
       stdio: ['ignore', 'pipe', 'pipe'],
     })
     const results: SearchLineEvent[] = []
+    const matchBudget = createSourceMatchBudget(maxResults)
     let stdout = ''
     let stderr = ''
     let didAbort = false
+    let didReachBudget = false
 
     const onAbort = () => {
       didAbort = true
@@ -135,6 +136,8 @@ function runRipgrep(
     signal?.addEventListener('abort', onAbort)
 
     child.stdout.on('data', (chunk: Buffer) => {
+      if (didReachBudget) return
+
       stdout += chunk.toString('utf8')
       const lines = stdout.split('\n')
       stdout = lines.pop() ?? ''
@@ -146,6 +149,11 @@ function runRipgrep(
         const relativePath = event.data.path.text
         const normalizedRelative = relativePath.split('/').join(path.sep)
         const kind = event.type === 'match' ? 'match' : 'context'
+        if (!matchBudget.accept(kind)) {
+          didReachBudget = true
+          child.kill()
+          break
+        }
 
         results.push({
           sourceId: source.id,
@@ -165,6 +173,12 @@ function runRipgrep(
               : [],
           projectName: projectNameFor(source, normalizedRelative),
         })
+
+        if (matchBudget.reached) {
+          didReachBudget = true
+          child.kill()
+          break
+        }
       }
     })
 
@@ -182,7 +196,7 @@ function runRipgrep(
 
       if (didAbort) {
         resolve([])
-      } else if (code === 0 || code === 1) {
+      } else if (didReachBudget || code === 0 || code === 1) {
         resolve(results)
       } else {
         reject(new Error(stderr || `ripgrep exited with code ${code}`))
