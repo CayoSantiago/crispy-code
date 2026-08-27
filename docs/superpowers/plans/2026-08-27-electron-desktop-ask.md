@@ -548,9 +548,9 @@ git commit -m "feat(desktop): port local Find search and config"
 - SSE: `GET /api/ask/turn-events?turnId=` streams NDJSON or `text/event-stream` of `HarnessEvent`
 - `useAskTurnStream(turnId)` reads SSE instead of Inngest
 
-- [ ] **Step 1: Port schemas / title / gemini / cap-evidence**
+- [ ] **Step 1: Port schemas / title / gemini**
 
-Copy `schemas.ts`, `title.ts`, `cap-evidence.ts` from web.
+Copy `schemas.ts` and `title.ts` from web Ask.
 
 `gemini.ts` changes:
 
@@ -558,6 +558,7 @@ Copy `schemas.ts`, `title.ts`, `cap-evidence.ts` from web.
 - `createGoogle({ apiKey })` with **default `fetch`** (remove `inngestFetch`)
 - Keep `planSearch` / `streamWriteAnswer` signatures; `onThinking` / `onAnswer` callbacks publish via harness events in the runner
 
+Evidence capping stays in `features/find/cap-evidence.ts` (ported in Task 5).
 - [ ] **Step 2: Register `search_local` and implement `runAskTurn`**
 
 Create `features/find/register-tools.ts`:
