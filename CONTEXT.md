@@ -1,6 +1,6 @@
 # Crispy Code
 
-Local code search and Ask: a signed-in user questions their own folders and gets answers grounded in matches from those folders.
+Local desktop code search and Ask: a user questions folders on their machine and gets answers grounded in matches from those folders.
 
 ## Language
 

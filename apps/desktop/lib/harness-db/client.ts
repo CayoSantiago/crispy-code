@@ -1,8 +1,10 @@
+import 'server-only'
+
 import { readFileSync } from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { DatabaseSync } from 'node:sqlite'
+import { fileURLToPath } from 'node:url'
 import { ensureDir } from '@/lib/fs'
 
 const dbDir = path.join(os.homedir(), '.crispy-code')
