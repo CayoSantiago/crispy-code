@@ -1,5 +1,6 @@
 import { onError } from '@orpc/server'
 import { RPCHandler } from '@orpc/server/fetch'
+import { isDesktopRequestAuthorized } from '@/lib/desktop-token'
 import type { OrpcContext } from '@/lib/orpc/context'
 import { appRouter } from '@/lib/orpc/router'
 
@@ -15,6 +16,10 @@ const handler = new RPCHandler(appRouter, {
 })
 
 async function handleRequest(request: Request) {
+  if (!isDesktopRequestAuthorized(request.headers)) {
+    return new Response('Forbidden', { status: 403 })
+  }
+
   const { response } = await handler.handle(request, {
     prefix: '/rpc',
     context: {

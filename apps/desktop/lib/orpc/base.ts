@@ -1,5 +1,6 @@
 import { os } from '@orpc/server'
 import { z } from 'zod/v4'
+import { isDesktopRequestAuthorized } from '@/lib/desktop-token'
 import type { OrpcContext } from '@/lib/orpc/context'
 
 export const base = os
@@ -16,9 +17,12 @@ export const base = os
     INTERNAL_SERVER_ERROR: {},
   })
   .use(({ context, next, errors }) => {
-    if (context.headers.get('sec-fetch-site') === 'cross-site') {
+    if (
+      context.headers.get('sec-fetch-site') === 'cross-site' ||
+      !isDesktopRequestAuthorized(context.headers)
+    ) {
       throw errors.FORBIDDEN({
-        message: 'Cross-site requests are not allowed.',
+        message: 'This request is not authorized for the desktop server.',
       })
     }
 

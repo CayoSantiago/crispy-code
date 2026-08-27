@@ -1,8 +1,13 @@
 import { subscribeTurnEvents } from '@/features/harness/events'
+import { isDesktopRequestAuthorized } from '@/lib/desktop-token'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: Request) {
+  if (!isDesktopRequestAuthorized(request.headers)) {
+    return new Response('Forbidden', { status: 403 })
+  }
+
   const turnId = new URL(request.url).searchParams.get('turnId')
   if (!turnId) {
     return new Response('turnId required', { status: 400 })

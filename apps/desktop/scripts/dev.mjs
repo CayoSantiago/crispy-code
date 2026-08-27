@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
 import http from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -9,6 +10,12 @@ const ROOT = path.join(__dirname, '..')
 const HOST = '127.0.0.1'
 const PORT = 3002
 const URL = `http://${HOST}:${PORT}`
+const configuredToken = process.env.DESKTOP_RPC_TOKEN?.trim()
+const desktopRpcToken =
+  configuredToken && configuredToken.length >= 32
+    ? configuredToken
+    : randomUUID()
+process.env.DESKTOP_RPC_TOKEN = desktopRpcToken
 
 function waitForServer(maxAttempts = 120, intervalMs = 500) {
   return new Promise((resolve, reject) => {
@@ -47,6 +54,7 @@ const next = spawn('pnpm', ['run', 'dev:next'], {
   shell: true,
   env: {
     ...process.env,
+    DESKTOP_RPC_TOKEN: desktopRpcToken,
     ELECTRON_DISABLE_SECURITY_WARNINGS: '1',
   },
 })
@@ -70,6 +78,7 @@ const electronProcess = spawn(electron, [electronMain], {
   stdio: 'inherit',
   env: {
     ...process.env,
+    DESKTOP_RPC_TOKEN: desktopRpcToken,
     ELECTRON_DISABLE_SECURITY_WARNINGS: '1',
   },
 })

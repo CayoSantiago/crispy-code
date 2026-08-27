@@ -1,11 +1,14 @@
 import path from 'node:path'
 import { createHighlightedCodeBlockProps } from '@tanstack/highlight/react'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { z } from 'zod/v4'
 import { CodeBlock, CodeBlockHeader } from '@/components/code-block'
 import { FileImagePreview } from '@/components/file-image-preview'
 import { HexDump } from '@/components/hex-dump'
 import { readFindConfig } from '@/features/find/config/service'
+import { resolveFileWithinRoots } from '@/features/find/file-access'
+import { isDesktopRequestAuthorized } from '@/lib/desktop-token'
 import { formatHexDump } from '@/lib/hex-dump'
 import { highlighter } from '@/lib/highlighter'
 import { languageForFilename } from '@/lib/highlighter/helpers'
@@ -30,12 +33,14 @@ const fileParamsSchema = z.object({
 export default async function FindFilePage({
   searchParams,
 }: PageProps<'/find/file'>) {
+  if (!isDesktopRequestAuthorized(await headers())) notFound()
+
   const parsed = fileParamsSchema.safeParse(await searchParams)
   if (!parsed.success) notFound()
 
   const { path: inputPath, line } = parsed.data
-  const filePath = path.resolve(inputPath)
-  await assertKnownSource(filePath)
+  const filePath = await resolveKnownFile(inputPath)
+  if (!filePath) notFound()
 
   let prefix: FilePrefix
   try {
@@ -142,22 +147,10 @@ function TruncationNotice({
   )
 }
 
-function isInsideRoot(candidate: string, root: string): boolean {
-  const relative = path.relative(root, candidate)
-  return (
-    relative.length > 0 &&
-    !relative.startsWith('..') &&
-    !path.isAbsolute(relative)
-  )
-}
-
-async function assertKnownSource(filePath: string): Promise<void> {
+async function resolveKnownFile(inputPath: string): Promise<string | null> {
   const config = await readFindConfig()
-  if (
-    !config.localRoots.some(
-      (root) => isInsideRoot(filePath, root.path) || filePath === root.path,
-    )
-  ) {
-    notFound()
-  }
+  return resolveFileWithinRoots(
+    path.resolve(inputPath),
+    config.localRoots.map((root) => root.path),
+  )
 }

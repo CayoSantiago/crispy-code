@@ -10,6 +10,13 @@ import type { AppRouter } from '@/lib/orpc/router'
 declare global {
   // Used by Optimize SSR dual-client bridge (see client.server.ts).
   var $client: RouterClient<AppRouter> | undefined
+
+  interface Window {
+    crispyDesktop?: {
+      desktopToken: string
+      platform: string
+    }
+  }
 }
 
 const link = new RPCLink({
@@ -20,6 +27,9 @@ const link = new RPCLink({
 
     return `${window.location.origin}/rpc`
   },
+  headers: () => ({
+    'x-desktop-token': window.crispyDesktop?.desktopToken ?? '',
+  }),
 })
 
 function getClient(): RouterClient<AppRouter> {

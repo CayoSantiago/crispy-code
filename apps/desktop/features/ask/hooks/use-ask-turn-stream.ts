@@ -14,6 +14,7 @@ export function useAskTurnStream(turnId: string | undefined) {
     setAnswer('')
     const source = new EventSource(
       `/api/ask/turn-events?turnId=${encodeURIComponent(turnId)}`,
+      { withCredentials: true },
     )
 
     source.onmessage = (message) => {
