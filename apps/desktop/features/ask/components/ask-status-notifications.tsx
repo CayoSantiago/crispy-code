@@ -7,7 +7,10 @@ import { Tooltip } from '@/components/tooltip'
 import { useAskConfigStatus } from '@/features/ask/hooks'
 
 export function AskStatusNotifications() {
-  const { geminiConfigured, hasLocalRootFolders } = useAskConfigStatus()
+  const { loading, geminiConfigured, hasLocalRootFolders } =
+    useAskConfigStatus()
+
+  if (loading) return null
 
   return (
     <>
