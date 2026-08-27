@@ -103,3 +103,40 @@ prints an engine warning; all required checks and the production build pass.
 - The first post-change typecheck compared stale `.next/types` declarations
   with current `.next/dev/types`. `next typegen` regenerated route declarations,
   after which both `check-types` and the production build passed.
+
+## Review Fix: SSE Subscription Race
+
+### Fix notes
+
+- Harness events now retain each turn's latest stage plus accumulated thinking
+  and answer text. New subscribers receive that snapshot before subsequent live
+  events, so an EventSource opened after `start` does not lose early tokens.
+- Terminal snapshots remain replayable for 60 seconds, covering turns that
+  finish before the browser completes its SSE connection without retaining
+  completed output indefinitely.
+- Persisted and streamed answers are reconciled only when one is a prefix of
+  the other. Divergent streamed text can no longer replace persisted content
+  merely because it is longer.
+- Added regression coverage for running-turn replay, terminal replay, and
+  persisted/streamed answer reconciliation.
+
+### Review-fix verification
+
+```bash
+pnpm --filter desktop check-types
+# Exit 0 — tsc --noEmit passed
+
+node --experimental-strip-types --test \
+  apps/desktop/features/ask/core.test.mjs \
+  apps/desktop/features/find/core.test.mjs \
+  apps/desktop/features/harness/events.test.mjs
+# Exit 0 — 11/11 tests passed
+
+pnpm exec biome check \
+  apps/desktop/features/ask/components/ask-thread.tsx \
+  apps/desktop/features/ask/core.test.mjs \
+  apps/desktop/features/ask/reconcile-turn-answer.ts \
+  apps/desktop/features/harness/events.ts \
+  apps/desktop/features/harness/events.test.mjs
+# Exit 0 — 5 files checked, no diagnostics
+```
