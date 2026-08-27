@@ -26,18 +26,6 @@ export const ROOT_NAV = [
     desc: 'Connect a public GitHub repository and read its commit diffs.',
     href: '/git',
   },
-  {
-    id: 'find',
-    title: 'Code Finder',
-    desc: 'Search local and GitHub project code in one place.',
-    href: '/find',
-  },
-  {
-    id: 'ask',
-    title: 'Ask',
-    desc: 'Ask about your local code and keep a chat history.',
-    href: '/ask',
-  },
 ] satisfies RouteData[]
 
 export const COMPONENTS_NAV = [

@@ -1,14 +1,11 @@
 import '@repo/ui/globals.css'
-
-import { env } from '@repo/env/next'
-import { TooltipProvider } from '@repo/ui/components/tooltip'
 import { cn } from '@repo/ui/lib/utils'
+
 import type { Metadata } from 'next'
 import { Geist_Mono, Inter } from 'next/font/google'
-import { NuqsAdapter } from 'nuqs/adapters/next/app'
 import { Providers } from '@/app/providers'
 import { ThemeProvider } from '@/components/theme-provider'
-import { HighligherStyles } from '@/lib/highlighter/theme'
+import { HighlighterStyles } from '@/lib/highlighter/theme'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' })
 
@@ -22,14 +19,9 @@ export const metadata: Metadata = {
     template: '%s | Crispy Code',
     default: 'Crispy Code',
   },
-  metadataBase: new URL(env.NEXT_PUBLIC_SITE_URL),
 }
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html
       lang='en'
@@ -44,15 +36,10 @@ export default function RootLayout({
       )}
     >
       <body suppressHydrationWarning>
+        <HighlighterStyles />
         <ThemeProvider>
-          <TooltipProvider delay={600}>
-            <Providers>
-              <NuqsAdapter>{children}</NuqsAdapter>
-            </Providers>
-          </TooltipProvider>
+          <Providers>{children}</Providers>
         </ThemeProvider>
-
-        <HighligherStyles />
       </body>
     </html>
   )

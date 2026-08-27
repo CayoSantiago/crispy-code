@@ -38,13 +38,13 @@ The token is optional; the feature works without it.
 
 ## Local database
 
-Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@repo/db`). Auth lives in `packages/auth` (`@repo/auth`) and uses Better Auth with the Prisma adapter. Find config still lives in `~/.crispy-code/config.json`.
+Postgres 16 runs in Docker for development. Prisma lives in `packages/db` (`@repo/db`). Auth lives in `packages/auth` (`@repo/auth`) and uses Better Auth with the Prisma adapter.
 
 ```bash
 cp .env.example .env
 ```
 
-Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `INNGEST_DEV=1` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN`, `GEMINI_API_KEY`, and OAuth client IDs in that file too.
+Copy `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, `RESEND_API_KEY`, `EMAIL_FROM`, and `INNGEST_DEV=1` into `apps/web/.env.local` (Next.js only loads env files from the app directory). You can keep `GITHUB_TOKEN` and OAuth client IDs in that file too.
 
 GitHub and Google sign-in stay off until both the client ID and secret for that provider are set. OAuth callback URLs are `{BETTER_AUTH_URL}/api/auth/callback/github` and `{BETTER_AUTH_URL}/api/auth/callback/google`. `GITHUB_TOKEN` is still only for the GitHub REST client; it is not the GitHub OAuth app secret.
 
@@ -82,18 +82,18 @@ pnpm --filter @repo/email email:dev
 
 Production (Netlify) also needs `RESEND_API_KEY`, `EMAIL_FROM`, `INNGEST_EVENT_KEY`, and `INNGEST_SIGNING_KEY`. Enable the Inngest Netlify integration or rely on `netlify-plugin-inngest`, which syncs `/api/inngest` after each deploy. Deploy Previews use Inngest branch environments via `BRANCH`.
 
-## Ask (`/ask`)
+## Desktop Ask and Find
 
-Signed-in users can ask about local code at `/ask`. Submitting a question creates a chat thread in Postgres and starts an Inngest function that:
+Ask and Find live in the Electron desktop app; the web app no longer hosts
+`/ask` or `/find`. Put the Gemini key in `apps/desktop/.env.local`:
 
-1. Asks Gemini (`gemini-2.5-flash-lite`) to plan 1–3 ripgrep queries (`generateText` via `step.ai.wrap`)
-2. Runs those queries only against local folders already configured on Code Finder (`/find`)
-3. Asks Gemini for a short answer from a capped set of matching snippets
-4. Saves the turn on the thread
+```bash
+GEMINI_API_KEY=your_key_here
+pnpm --filter desktop dev
+```
 
-Follow-ups stay in the same thread. History lives on the Ask page. Refreshing `/ask/[threadId]` reloads from Postgres and keeps polling while a turn is `RUNNING`. Ask does not search GitHub mirrors.
-
-Optional: set `GEMINI_API_KEY` in `apps/web/.env.local`. The app boots without it; Ask shows a banner until the key is set. Pass the key with `createGoogle({ apiKey: env.GEMINI_API_KEY })` rather than the SDK default `GOOGLE_GENERATIVE_AI_API_KEY`. After pulling this change, run `pnpm db:migrate` so the `ask_thread` and `ask_turn` tables exist.
+Find searches local folders configured in `~/.crispy-code/config.json`. Ask
+threads are stored locally in `~/.crispy-code/ask.sqlite`.
 
 ## Production database (Neon + Netlify)
 
@@ -130,19 +130,3 @@ Add these GitHub Actions secrets so `.github/workflows/neon-preview-cleanup.yml`
 - `NETLIFY_AUTH_TOKEN` and `NETLIFY_SITE_ID` — delete every Deploy Preview for that PR so `deploy-preview-<N>` 404s. `NETLIFY_SITE_ID` is the site API ID under **Site configuration → General → Site details**. Create `NETLIFY_AUTH_TOKEN` as a Netlify personal access token that can list and delete deploys.
 
 For preview sign-in, add each Deploy Preview callback URL in the GitHub and Google OAuth consoles (`{DEPLOY_PRIME_URL}/api/auth/callback/github` and `{DEPLOY_PRIME_URL}/api/auth/callback/google`). The build plugin sets `BETTER_AUTH_URL` to `DEPLOY_PRIME_URL` on non-production deploys.
-
-## Code Finder
-
-Visit `/find` to search code snippets across:
-
-- local project folders you add manually, and
-- selected GitHub repositories synced as shallow local mirrors.
-
-Search runs with `ripgrep` and respects each project's `.gitignore` entries.
-
-### Notes
-
-- GitHub mirrors live under `~/.crispy-code/repos` and refresh automatically when you select a repo or revisit `/find` (at most once per hour per repo).
-- App config is stored in `~/.crispy-code/config.json`.
-- Failed mirrors can be retried from the Sources → GitHub tab.
-- `GITHUB_TOKEN` is optional but helps avoid low unauthenticated rate limits.
